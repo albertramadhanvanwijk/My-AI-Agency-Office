@@ -1,8 +1,20 @@
-export default function HomePage() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-8">
-      <h1 className="text-3xl font-bold">My AI Agency Office</h1>
-      <p className="mt-2 text-muted-foreground">Scaffold OK — toolchain ready.</p>
-    </main>
-  );
+import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+
+export default async function HomePage() {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user) {
+    redirect("/login");
+  }
+
+  const role = (session.user as { role?: string }).role;
+
+  if (role === "CLIENT") {
+    redirect("/portal");
+  }
+
+  // OWNER and any authenticated fallback → dashboard/lobby
+  redirect("/dashboard");
 }
