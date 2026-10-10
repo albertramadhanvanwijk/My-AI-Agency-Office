@@ -1,0 +1,14 @@
+{
+  "mcp": {
+    "servers": {
+      "memoryMyAgencyOffice": {
+        "type": "local",
+        "command": [
+          "npx",
+          "-y",
+          "@modelcontextprotocol/server-memory"
+        ]
+      }
+    }
+  }
+}
