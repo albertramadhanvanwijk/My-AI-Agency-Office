@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#16213e;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="building" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#e94560;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ff6b6b;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="window" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#fff;stop-opacity:0.9" />
+      <stop offset="100%" style="stop-color:#e0e0e0;stop-opacity:0.7" />
+    </linearGradient>
+  </defs>
+  <rect width="72" height="72" rx="12" fill="url(#bg)"/>
+  <g transform="translate(36, 48)">
+    <path d="M-22,0 L-22,-30 L22,-30 L22,0 Z" fill="url(#building)"/>
+    <path d="M-26,-30 L0,-42 L26,-30 L-26,-30 Z" fill="#0f3460"/>
+    <g fill="url(#window)">
+      <rect x="-18" y="-26" width="5" height="7" rx="1"/>
+      <rect x="-18" y="-18" width="5" height="7" rx="1"/>
+      <rect x="-18" y="-10" width="5" height="7" rx="1"/>
+      <rect x="-18" y="-2" width="5" height="7" rx="1"/>
+      <rect x="-9" y="-26" width="5" height="7" rx="1"/>
+      <rect x="-9" y="-18" width="5" height="7" rx="1"/>
+      <rect x="-9" y="-10" width="5" height="7" rx="1"/>
+      <rect x="-9" y="-2" width="5" height="7" rx="1"/>
+      <rect x="4" y="-26" width="5" height="7" rx="1"/>
+      <rect x="4" y="-18" width="5" height="7" rx="1"/>
+      <rect x="4" y="-10" width="5" height="7" rx="1"/>
+      <rect x="4" y="-2" width="5" height="7" rx="1"/>
+      <rect x="13" y="-26" width="5" height="7" rx="1"/>
+      <rect x="13" y="-18" width="5" height="7" rx="1"/>
+      <rect x="13" y="-10" width="5" height="7" rx="1"/>
+      <rect x="13" y="-2" width="5" height="7" rx="1"/>
+    </g>
+    <path d="M-4,0 L-4,-12 L4,-12 L4,0 Z" fill="#0f3460"/>
+    <rect x="-2" y="-4" width="4" height="4" fill="#e94560"/>
+  </g>
+  <g transform="translate(36, 44)" fill="#2ecc71">
+    <circle cx="-28" cy="2" r="2"/>
+    <circle cx="28" cy="2" r="2"/>
+  </g>
+</svg>

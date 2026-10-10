@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="152" height="152" viewBox="0 0 152 152">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#16213e;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="building" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#e94560;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ff6b6b;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="window" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#fff;stop-opacity:0.9" />
+      <stop offset="100%" style="stop-color:#e0e0e0;stop-opacity:0.7" />
+    </linearGradient>
+  </defs>
+  <rect width="152" height="152" rx="30" fill="url(#bg)"/>
+  <g transform="translate(76, 96)">
+    <path d="M-48,0 L-48,-63 L48,-63 L48,0 Z" fill="url(#building)"/>
+    <path d="M-55,-63 L0,-86 L55,-63 L-55,-63 Z" fill="#0f3460"/>
+    <g fill="url(#window)">
+      <rect x="-40" y="-56" width="11" height="14" rx="2"/>
+      <rect x="-40" y="-40" width="11" height="14" rx="2"/>
+      <rect x="-40" y="-24" width="11" height="14" rx="2"/>
+      <rect x="-40" y="-8" width="11" height="14" rx="2"/>
+      <rect x="-20" y="-56" width="11" height="14" rx="2"/>
+      <rect x="-20" y="-40" width="11" height="14" rx="2"/>
+      <rect x="-20" y="-24" width="11" height="14" rx="2"/>
+      <rect x="-20" y="-8" width="11" height="14" rx="2"/>
+      <rect x="9" y="-56" width="11" height="14" rx="2"/>
+      <rect x="9" y="-40" width="11" height="14" rx="2"/>
+      <rect x="9" y="-24" width="11" height="14" rx="2"/>
+      <rect x="9" y="-8" width="11" height="14" rx="2"/>
+      <rect x="29" y="-56" width="11" height="14" rx="2"/>
+      <rect x="29" y="-40" width="11" height="14" rx="2"/>
+      <rect x="29" y="-24" width="11" height="14" rx="2"/>
+      <rect x="29" y="-8" width="11" height="14" rx="2"/>
+    </g>
+    <path d="M-8,0 L-8,-23 L8,-23 L8,0 Z" fill="#0f3460"/>
+    <rect x="-4" y="-8" width="8" height="8" fill="#e94560" rx="1"/>
+  </g>
+  <g transform="translate(76, 90)" fill="#2ecc71">
+    <circle cx="-59" cy="3" r="5"/>
+    <circle cx="59" cy="3" r="5"/>
+  </g>
+</svg>
