@@ -1,0 +1,40 @@
+{
+  "name": "my-ai-agency-office",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "next": "^15.3.5",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^2.6.0",
+    "lucide-react": "^0.511.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "@types/node": "^22.15.0",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "tailwindcss": "^3.4.17",
+    "postcss": "^8.5.4",
+    "autoprefixer": "^10.4.21",
+    "tailwindcss-animate": "^1.0.7",
+    "eslint": "^9.27.0",
+    "eslint-config-next": "^15.3.5",
+    "@eslint/eslintrc": "^3.3.1",
+    "vitest": "^3.2.4",
+    "jsdom": "^26.1.0",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@vitejs/plugin-react": "^4.5.2"
+  }
+}
