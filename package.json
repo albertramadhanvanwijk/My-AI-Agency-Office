@@ -14,7 +14,9 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:setup": "prisma generate && prisma migrate dev --name init"
   },
-  "prisma": { "seed": "tsx prisma/seed.ts" },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
   "dependencies": {
     "@prisma/client": "^6.8.0",
     "bcryptjs": "^3.0.3",
@@ -22,6 +24,7 @@
     "clsx": "^2.1.1",
     "lucide-react": "^0.511.0",
     "next": "^15.3.5",
+    "next-auth": "^4.24.15",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "tailwind-merge": "^2.6.0",
