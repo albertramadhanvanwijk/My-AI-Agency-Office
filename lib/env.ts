@@ -36,6 +36,9 @@ export const env = {
   get NINE_ROUTER_API_KEY() {
     return optionalEnv("NINE_ROUTER_API_KEY");
   },
+  get NINE_ROUTER_BASE_URL() {
+    return optionalEnv("NINE_ROUTER_BASE_URL", "https://api.9router.com/v1");
+  },
   get NEXT_PUBLIC_APP_URL() {
     return optionalEnv("NEXT_PUBLIC_APP_URL", "http://localhost:3000");
   },
