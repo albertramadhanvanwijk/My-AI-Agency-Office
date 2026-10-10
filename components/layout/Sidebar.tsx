@@ -17,6 +17,7 @@ import {
   Handshake,
   Scale,
   Layers,
+  FileText,
 } from "lucide-react";
 
 export type DivisionNavItem = {
@@ -110,6 +111,9 @@ export default function Sidebar({ divisions, className }: SidebarProps) {
         </NavLink>
         <NavLink href="/chat" active={isActive("/chat")}>
           <MessageSquare className="h-4 w-4 shrink-0" /> Chat
+        </NavLink>
+        <NavLink href="/proposals" active={isActive("/proposals")}>
+          <FileText className="h-4 w-4 shrink-0" /> Proposals
         </NavLink>
         <NavLink href="/organization" active={isActive("/organization")}>
           <Layers className="h-4 w-4 shrink-0" /> Organization
