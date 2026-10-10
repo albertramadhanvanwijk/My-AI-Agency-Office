@@ -31,7 +31,7 @@ export function Sheet({ open, onOpenChange, children }: SheetProps) {
       <div
         className="fixed inset-0 bg-black/40 backdrop-blur-sm"
         onClick={() => onOpenChange(false)}
-        aria-hidden
+        aria-hidden="true"
       />
       {children}
     </div>

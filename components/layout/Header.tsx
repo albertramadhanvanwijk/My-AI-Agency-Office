@@ -53,7 +53,7 @@ export default function Header({
           data-testid="online-count"
           className="inline-flex items-center gap-1.5 rounded-full border bg-muted/60 px-2.5 py-1"
         >
-          <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden />
+          <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true" />
           Online {onlineCount}
         </span>
         <span
@@ -67,7 +67,7 @@ export default function Header({
 
       {/* Mobile online dot */}
       <div className="flex items-center gap-1 sm:hidden">
-        <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden />
+        <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true" />
         <span data-testid="online-count-mobile" className="text-xs text-muted-foreground">
           {onlineCount}
         </span>

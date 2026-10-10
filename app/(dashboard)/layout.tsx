@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -67,11 +68,12 @@ async function getPresenceCounts(): Promise<{ onlineCount: number; activeProject
 }
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const [session, divisions, counts] = await Promise.all([
-    getServerSession(authOptions),
-    getDivisions(),
-    getPresenceCounts(),
-  ]);
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    redirect("/login");
+  }
+
+  const [divisions, counts] = await Promise.all([getDivisions(), getPresenceCounts()]);
 
   const user = sessionToHeaderUser(session as never);
 

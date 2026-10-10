@@ -30,17 +30,31 @@ export async function middleware(req: NextRequest) {
     // but dot files inside dashboard would otherwise be blocked — treat as public for safety
     // Only block known protected prefixes
     const isProtectedPrefix =
-      pathname.startsWith("/dashboard") || pathname.startsWith("/portal") || pathname.startsWith("/api/");
+      pathname.startsWith("/dashboard") ||
+      pathname.startsWith("/portal") ||
+      pathname.startsWith("/api/") ||
+      pathname.startsWith("/lobby") ||
+      pathname.startsWith("/projects") ||
+      pathname.startsWith("/chat") ||
+      pathname.startsWith("/organization") ||
+      pathname.startsWith("/divisions");
     if (!isProtectedPrefix) return NextResponse.next();
   }
 
-  const isDashboard = pathname.startsWith("/dashboard");
+  const isProtectedDashboard =
+    pathname.startsWith("/dashboard") ||
+    pathname.startsWith("/lobby") ||
+    pathname.startsWith("/projects") ||
+    pathname.startsWith("/chat") ||
+    pathname.startsWith("/organization") ||
+    pathname.startsWith("/divisions");
   const isPortal = pathname.startsWith("/portal");
   const isApi = pathname.startsWith("/api/");
 
-  // Unprotected routes that are not dashboard/portal/api — allow through (e.g., /, /lobby if public)
-  // Spec: guard /dashboard/* OWNER only, /portal/* CLIENT|OWNER, /api/* requires session where needed
-  if (!isDashboard && !isPortal && !isApi) {
+  // Unprotected routes that are not dashboard/portal/api — allow through (e.g., /)
+  // Spec: guard /dashboard/* + /lobby + /projects + /chat + /organization + /divisions/* OWNER only,
+  // /portal/* CLIENT|OWNER, /api/* requires session where needed
+  if (!isProtectedDashboard && !isPortal && !isApi) {
     return NextResponse.next();
   }
 
@@ -72,7 +86,7 @@ export async function middleware(req: NextRequest) {
 
   const role = (token as { role?: string } | null)?.role as string | undefined;
 
-  if (isDashboard) {
+  if (isProtectedDashboard) {
     // OWNER only
     if (role !== "OWNER") {
       // CLIENT trying to hit dashboard -> redirect to /portal (better UX than /login when already authed)
@@ -100,5 +114,15 @@ export const config = {
     "/dashboard/:path*",
     "/portal/:path*",
     "/api/:path*",
+    "/lobby",
+    "/lobby/:path*",
+    "/projects",
+    "/projects/:path*",
+    "/chat",
+    "/chat/:path*",
+    "/organization",
+    "/organization/:path*",
+    "/divisions",
+    "/divisions/:path*",
   ],
 };
