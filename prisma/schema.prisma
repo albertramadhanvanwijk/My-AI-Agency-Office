@@ -1,0 +1,350 @@
+// Prisma schema — My AI Agency Office (14 tables, 12 domains + Chat)
+// PostgreSQL. For Vitest without DB, tests gracefully skip if DATABASE_URL missing.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Enums ──────────────────────────────────────────────────────────
+
+enum UserRole {
+  OWNER
+  CLIENT
+}
+
+enum DivisionStatus {
+  active
+  provisional
+  archived
+}
+
+enum StaffStatus {
+  active
+  standby
+  break
+}
+
+enum RoomType {
+  lobby
+  division
+  meeting
+  amenity
+}
+
+enum ProjectStatus {
+  INQUIRY
+  BRIEF
+  PLANNING
+  EXECUTION
+  QA
+  DELIVERY
+  CLOSING
+}
+
+enum TaskStatus {
+  todo
+  progress
+  review
+  done
+}
+
+enum ProposalType {
+  division
+  role
+  room
+}
+
+enum ProposalStatus {
+  pending
+  approved
+  rejected
+}
+
+enum InvoiceStatus {
+  draft
+  sent
+  paid
+  overdue
+  cancelled
+}
+
+enum ConversationType {
+  project
+  direct
+}
+
+enum ConversationStatus {
+  open
+  archived
+}
+
+enum MessageSenderType {
+  human
+  ai_staff
+}
+
+// ── Core ───────────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String?
+  name          String
+  avatar        String?
+  role          UserRole
+  emailVerified DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  clients Client[]
+
+  @@map("users")
+}
+
+model Division {
+  id        String         @id @default(cuid())
+  name      String         @unique
+  color     String
+  icon      String
+  status    DivisionStatus @default(active)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  roles Role[]
+  staff Staff[]
+  rooms Room[]
+
+  @@map("divisions")
+}
+
+model Role {
+  id              String   @id @default(cuid())
+  divisionId      String
+  division        Division @relation(fields: [divisionId], references: [id], onDelete: Cascade)
+  level           String // HEAD | MANAGER | STAFF | SUPPORT
+  title           String
+  systemPrompt    String?  @db.Text
+  modelVia9Router String?
+  tools           Json? // array of tool ids
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  staff Staff[]
+
+  @@index([divisionId])
+  @@map("roles")
+}
+
+model Staff {
+  id         String      @id @default(cuid())
+  roleId     String
+  role       Role        @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  divisionId String?
+  division   Division?   @relation(fields: [divisionId], references: [id], onDelete: SetNull)
+  name       String
+  avatar     String?
+  status     StaffStatus @default(standby)
+  // Staff.deskId optional unique pointer to Desk.id (kept in sync with Desk.staffId)
+  deskId     String?     @unique
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  tasks Task[]
+  Desk  Desk?
+
+  @@index([roleId])
+  @@index([divisionId])
+  @@index([status])
+  @@map("staff")
+}
+
+model Room {
+  id         String    @id @default(cuid())
+  type       RoomType
+  divisionId String?
+  division   Division? @relation(fields: [divisionId], references: [id], onDelete: SetNull)
+  x          Int
+  y          Int
+  w          Int
+  h          Int
+  capacity   Int
+  floor      Int       @default(1)
+
+  desks Desk[]
+
+  @@index([divisionId])
+  @@index([type])
+  @@map("rooms")
+}
+
+model Desk {
+  id        String  @id @default(cuid())
+  roomId    String?
+  room      Room?   @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  clusterId String?
+  // Canonical FK to Staff — Desk.staffId unique, Staff.deskId is mirrored string (no FK) for fast lookup
+  staffId   String? @unique
+  staff     Staff?  @relation(fields: [staffId], references: [id], onDelete: SetNull)
+  x         Int?
+  y         Int?
+
+  @@index([roomId])
+  @@index([staffId])
+  @@map("desks")
+}
+
+// Add back-relation for Desk.staff -> Staff is handled via Desk.staff field above.
+// Prisma requires opposite side — we keep Staff.tasks only; Desk.staff relation is one-way is fine
+// since Staff.deskId is a plain unique string (no FK relation needed).
+
+model Client {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company   String?
+  contact   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  projects Project[]
+  invoices Invoice[]
+
+  @@map("clients")
+}
+
+model Project {
+  id                    String        @id @default(cuid())
+  clientId              String
+  client                Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  title                 String
+  brief                 String        @db.Text
+  status                ProjectStatus @default(INQUIRY)
+  provisionalDivisionId String?
+  divisionIds           String[]      @default([])
+  timeline              Json?
+  budget                Decimal?      @db.Decimal(12, 2)
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  tasks         Task[]
+  invoices      Invoice[]
+  proposals     Proposal[]     @relation("ProposalTrigger")
+  conversations Conversation[]
+
+  @@index([clientId])
+  @@index([status])
+  @@map("projects")
+}
+
+model Task {
+  id              String     @id @default(cuid())
+  projectId       String
+  project         Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assigneeStaffId String?
+  assignee        Staff?     @relation(fields: [assigneeStaffId], references: [id], onDelete: SetNull)
+  stage           String?
+  status          TaskStatus @default(todo)
+  payload         Json?
+  resultAssetUrl  String?
+  parentTaskId    String?
+  parent          Task?      @relation("TaskChildren", fields: [parentTaskId], references: [id], onDelete: SetNull)
+  children        Task[]     @relation("TaskChildren")
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@index([projectId])
+  @@index([assigneeStaffId])
+  @@index([status])
+  @@map("tasks")
+}
+
+model Proposal {
+  id               String         @id @default(cuid())
+  type             ProposalType
+  triggerProjectId String?
+  triggerProject   Project?       @relation("ProposalTrigger", fields: [triggerProjectId], references: [id], onDelete: SetNull)
+  payload          Json
+  status           ProposalStatus @default(pending)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@index([triggerProjectId])
+  @@index([status])
+  @@map("proposals")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  who       String
+  action    String
+  targetId  String?
+  modelUsed String?
+  tokens    Int?
+  createdAt DateTime @default(now())
+
+  @@index([who])
+  @@index([action])
+  @@map("audit_logs")
+}
+
+model Invoice {
+  id          String        @id @default(cuid())
+  projectId   String
+  project     Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  clientId    String
+  client      Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  number      String        @unique
+  items       Json
+  amount      Decimal       @db.Decimal(12, 2)
+  status      InvoiceStatus @default(draft)
+  dueDate     DateTime?
+  pdfUrl      String?
+  generatedBy String?
+  approvedBy  String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([projectId])
+  @@index([clientId])
+  @@index([status])
+  @@map("invoices")
+}
+
+model Conversation {
+  id             String             @id @default(cuid())
+  projectId      String?
+  project        Project?           @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  type           ConversationType
+  participantIds Json // String[]
+  title          String?
+  status         ConversationStatus @default(open)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  messages Message[]
+
+  @@index([projectId])
+  @@index([type])
+  @@map("conversations")
+}
+
+model Message {
+  id              String            @id @default(cuid())
+  conversationId  String
+  conversation    Conversation      @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderType      MessageSenderType
+  senderId        String
+  content         String            @db.Text
+  attachments     Json?
+  modelVia9Router String?
+  createdAt       DateTime          @default(now())
+
+  @@index([conversationId])
+  @@index([senderId])
+  @@map("messages")
+}
