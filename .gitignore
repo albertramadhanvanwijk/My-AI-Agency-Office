@@ -21,8 +21,8 @@ dist
 .branches
 .temp
 
-# Prisma
-prisma/migrations
+# Prisma — keep migrations, ignore generated client if needed
+# (migrations are source of truth — do not ignore)
 
 # IDE
 .vscode
