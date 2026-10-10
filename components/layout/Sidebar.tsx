@@ -18,6 +18,9 @@ import {
   Scale,
   Layers,
   FileText,
+  Settings,
+  Zap,
+  ListChecks,
 } from "lucide-react";
 
 export type DivisionNavItem = {
@@ -117,6 +120,21 @@ export default function Sidebar({ divisions, className }: SidebarProps) {
         </NavLink>
         <NavLink href="/organization" active={isActive("/organization")}>
           <Layers className="h-4 w-4 shrink-0" /> Organization
+        </NavLink>
+
+        <Separator className="my-3" />
+
+        <p className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+          Admin
+        </p>
+        <NavLink href="/admin/settings" active={isActive("/admin/settings")}>
+          <Settings className="h-4 w-4 shrink-0" /> Settings
+        </NavLink>
+        <NavLink href="/admin/feature-flags" active={isActive("/admin/feature-flags")}>
+          <Zap className="h-4 w-4 shrink-0" /> Feature Flags
+        </NavLink>
+        <NavLink href="/admin/audit-logs" active={isActive("/admin/audit-logs")}>
+          <ListChecks className="h-4 w-4 shrink-0" /> Audit Logs
         </NavLink>
 
         <Separator className="my-3" />
