@@ -1,0 +1,26 @@
+{
+  "rooms": [
+    { "id": "room-lobby", "type": "lobby", "divisionId": null, "x": 120, "y": 200, "w": 120, "h": 40, "capacity": 12, "floor": 1, "label": "LOBBY", "color": "#fef3c7" },
+    { "id": "room-strategy", "type": "division", "divisionId": "div-strategy", "x": 10, "y": 10, "w": 70, "h": 55, "capacity": 6, "floor": 1, "label": "Strategy", "color": "#dbeafe" },
+    { "id": "room-creative", "type": "division", "divisionId": "div-creative", "x": 10, "y": 70, "w": 70, "h": 55, "capacity": 8, "floor": 1, "label": "Creative Studio", "color": "#fce7f3" },
+    { "id": "room-meeting-small", "type": "meeting", "x": 10, "y": 130, "w": 70, "h": 45, "capacity": 6, "floor": 1, "label": "Meeting Small", "color": "#e0e7ff" },
+    { "id": "room-client-lounge", "type": "amenity", "divisionId": "div-client", "x": 10, "y": 180, "w": 70, "h": 50, "capacity": 8, "floor": 1, "label": "Client Lounge", "color": "#ede9fe", "icon": "🛋️" },
+    { "id": "room-finance", "type": "division", "divisionId": "div-finance", "x": 280, "y": 10, "w": 70, "h": 55, "capacity": 6, "floor": 1, "label": "Finance & Admin", "color": "#fef3c7" },
+    { "id": "room-techlab", "type": "division", "divisionId": "div-tech", "x": 280, "y": 70, "w": 70, "h": 55, "capacity": 10, "floor": 1, "label": "Tech Lab", "color": "#dcfce7" },
+    { "id": "room-marketing", "type": "division", "divisionId": "div-marketing", "x": 280, "y": 130, "w": 70, "h": 45, "capacity": 8, "floor": 1, "label": "Marketing", "color": "#ffedd5" },
+    { "id": "room-meeting-large", "type": "meeting", "x": 280, "y": 180, "w": 70, "h": 50, "capacity": 12, "floor": 1, "label": "Meeting Large", "color": "#e0e7ff" },
+    { "id": "room-board", "type": "meeting", "x": 90, "y": 10, "w": 60, "h": 35, "capacity": 10, "floor": 1, "label": "Board Room", "color": "#f3f4f6" },
+    { "id": "room-war", "type": "meeting", "x": 155, "y": 10, "w": 60, "h": 35, "capacity": 12, "floor": 1, "label": "War Room", "color": "#f3f4f6" },
+    { "id": "room-executive", "type": "meeting", "x": 220, "y": 10, "w": 50, "h": 35, "capacity": 8, "floor": 1, "label": "Executive", "color": "#f3f4f6" },
+    { "id": "room-pantry", "type": "amenity", "x": 285, "y": 190, "w": 65, "h": 40, "capacity": 10, "floor": 1, "label": "Pantry", "color": "#fef9c3", "icon": "☕" },
+    { "id": "room-musholla", "type": "amenity", "x": 95, "y": 205, "w": 30, "h": 30, "capacity": 6, "floor": 1, "label": "Musholla", "color": "#dcfce7", "icon": "🕌" },
+    { "id": "room-break", "type": "amenity", "x": 15, "y": 190, "w": 65, "h": 40, "capacity": 10, "floor": 1, "label": "Break Room", "color": "#ede9fe", "icon": "🎮" },
+    { "id": "room-flex-central", "type": "meeting", "x": 90, "y": 50, "w": 180, "h": 140, "capacity": 64, "floor": 1, "label": "Flexible Floor", "color": "#fafaf9" }
+  ],
+  "desks": [],
+  "clusters": {
+    "note": "max 16 clusters x4 = 64 seat in flex-central, rendered only when staff active. Desk positions derived from cluster grid.",
+    "flexGrid": { "cols": 4, "rows": 4, "clusterSize": 4, "origin": { "x": 95, "y": 55 }, "cellW": 42, "cellH": 32 }
+  },
+  "camera": { "isoAngleDeg": 30, "position": [18, 22, 18], "zoom": 42, "near": 0.1, "far": 1000 }
+}
