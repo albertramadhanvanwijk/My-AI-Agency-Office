@@ -21,9 +21,9 @@ async function login(page: Page, email: string, passwords: string[]): Promise<bo
   for (const pw of passwords) {
     await page.goto("/login");
     await page.waitForLoadState("networkidle");
-    await page.fill('input[name="email"]', email);
-    await page.fill('input[name="password"]', pw);
-    await page.click('button[type="submit"]');
+    await page.fill('[data-testid="email-input"]', email);
+    await page.fill('[data-testid="password-input"]', pw);
+    await page.click('[data-testid="login-submit"]');
     // Wait a bit for navigation
     await page.waitForTimeout(1500);
     const url = page.url();

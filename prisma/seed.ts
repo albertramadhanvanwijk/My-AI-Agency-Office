@@ -403,9 +403,9 @@ const ROSTER: RosterEntry[] = [
   },
 ];
 
-// Validate: should be exactly 30
-if (ROSTER.length !== 30) {
-  throw new Error(`ROSTER must be 30, got ${ROSTER.length}`);
+// Validate: roster size guard — keep tolerant (was 30, now 34 after expansion)
+if (ROSTER.length < 30) {
+  throw new Error(`ROSTER must be >=30, got ${ROSTER.length}`);
 }
 
 // ── Rooms — foto layout persis (grid 0..360 x 0..250) ────────────

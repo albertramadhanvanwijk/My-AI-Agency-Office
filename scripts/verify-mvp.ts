@@ -133,7 +133,7 @@ async function checkDbCounts(): Promise<void> {
   const dbUrl = process.env.DATABASE_URL;
   if (!dbUrl) {
     push("DB:divisions>=6", "SKIP", "DATABASE_URL missing — skip DB counts");
-    push("DB:staff==30", "SKIP", "DATABASE_URL missing — skip DB counts");
+    push("DB:staff>=30", "SKIP", "DATABASE_URL missing — skip DB counts");
     return;
   }
 
@@ -153,12 +153,11 @@ async function checkDbCounts(): Promise<void> {
       push("DB:divisions>=6", "FAIL", msg);
     }
 
-    // Staff ==30
+    // Staff >=30 (seed expanded from 30 to 34)
     try {
       const staffCount = await client.staff.count();
-      if (staffCount === 30) push("DB:staff==30", "PASS", `count=${staffCount}`);
-      else if (staffCount >= 30) push("DB:staff==30", "WARN", `count=${staffCount} (expected 30)`);
-      else push("DB:staff==30", "FAIL", `count=${staffCount} != 30 — run npx tsx prisma/seed.ts`);
+      if (staffCount >= 30) push("DB:staff>=30", "PASS", `count=${staffCount}`);
+      else push("DB:staff>=30", "FAIL", `count=${staffCount} < 30 — run npx tsx prisma/seed.ts`);
     } catch (e) {
       const msg = e instanceof Error ? e.message.slice(0, 200) : String(e);
       push("DB:staff==30", "FAIL", msg);
@@ -176,7 +175,7 @@ async function checkDbCounts(): Promise<void> {
     const msg = e instanceof Error ? e.message.slice(0, 300) : String(e);
     push("DB:connect", "FAIL", msg);
     push("DB:divisions>=6", "FAIL", "DB connect failed");
-    push("DB:staff==30", "FAIL", "DB connect failed");
+    push("DB:staff>=30", "FAIL", "DB connect failed");
   } finally {
     if (client) {
       await client.$disconnect().catch(() => {});

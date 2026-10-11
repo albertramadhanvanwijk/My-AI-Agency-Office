@@ -95,6 +95,8 @@ export default function LoginForm() {
           <label htmlFor="email" className="text-sm font-medium">Email</label>
           <input
             id="email"
+            name="email"
+            data-testid="email-input"
             type="email"
             required
             value={email}
@@ -108,6 +110,8 @@ export default function LoginForm() {
           <label htmlFor="password" className="text-sm font-medium">Password</label>
           <input
             id="password"
+            name="password"
+            data-testid="password-input"
             type="password"
             required
             value={password}
@@ -120,6 +124,7 @@ export default function LoginForm() {
         <button
           type="submit"
           disabled={loading}
+          data-testid="login-submit"
           className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
         >
           {loading ? "Memproses..." : "Masuk dengan Email"}

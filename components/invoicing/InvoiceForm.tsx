@@ -82,7 +82,7 @@ export function InvoiceForm({ initialInvoice, projects }: InvoiceFormProps) {
         setFormData((prev) => ({ ...prev, items: newItems }));
       }
     }
-  }, [formData.projectId, initialInvoice, projects]);
+  }, [formData.projectId, formData.items, initialInvoice, projects]);
 
   const validateForm = (): boolean => {
     const result = formSchema.safeParse(formData);

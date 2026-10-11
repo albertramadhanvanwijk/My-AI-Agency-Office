@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 const OWNER_EMAIL = "owner@myagency.local";
-const OWNER_PASSWORD = "password123";
+const OWNER_PASSWORD = "owner123";
 
 test.describe("Owner Login → Dashboard → 3D Lobby → Click Avatar → Chat", () => {
   test.beforeEach(async ({ page }) => {
@@ -11,9 +11,9 @@ test.describe("Owner Login → Dashboard → 3D Lobby → Click Avatar → Chat"
 
   test("owner can login and access dashboard", async ({ page }) => {
     // Login with credentials
-    await page.fill('input[name="email"]', OWNER_EMAIL);
-    await page.fill('input[name="password"]', OWNER_PASSWORD);
-    await page.click('button[type="submit"]');
+    await page.fill('[data-testid="email-input"]', OWNER_EMAIL);
+    await page.fill('[data-testid="password-input"]', OWNER_PASSWORD);
+    await page.click('[data-testid="login-submit"]');
     
     // Should redirect to dashboard
     await expect(page).toHaveURL(/\/dashboard/);
@@ -22,9 +22,9 @@ test.describe("Owner Login → Dashboard → 3D Lobby → Click Avatar → Chat"
 
   test("owner can navigate to lobby and see 3D office", async ({ page }) => {
     // Login
-    await page.fill('input[name="email"]', OWNER_EMAIL);
-    await page.fill('input[name="password"]', OWNER_PASSWORD);
-    await page.click('button[type="submit"]');
+    await page.fill('[data-testid="email-input"]', OWNER_EMAIL);
+    await page.fill('[data-testid="password-input"]', OWNER_PASSWORD);
+    await page.click('[data-testid="login-submit"]');
     await expect(page).toHaveURL(/\/dashboard/);
     
     // Navigate to lobby
@@ -44,9 +44,9 @@ test.describe("Owner Login → Dashboard → 3D Lobby → Click Avatar → Chat"
 
   test("owner can click avatar in lobby and open chat drawer", async ({ page }) => {
     // Login
-    await page.fill('input[name="email"]', OWNER_EMAIL);
-    await page.fill('input[name="password"]', OWNER_PASSWORD);
-    await page.click('button[type="submit"]');
+    await page.fill('[data-testid="email-input"]', OWNER_EMAIL);
+    await page.fill('[data-testid="password-input"]', OWNER_PASSWORD);
+    await page.click('[data-testid="login-submit"]');
     await expect(page).toHaveURL(/\/dashboard/);
     
     // Navigate to lobby
@@ -72,9 +72,9 @@ test.describe("Owner Login → Dashboard → 3D Lobby → Click Avatar → Chat"
 
   test("owner can click room and see staff drawer", async ({ page }) => {
     // Login
-    await page.fill('input[name="email"]', OWNER_EMAIL);
-    await page.fill('input[name="password"]', OWNER_PASSWORD);
-    await page.click('button[type="submit"]');
+    await page.fill('[data-testid="email-input"]', OWNER_EMAIL);
+    await page.fill('[data-testid="password-input"]', OWNER_PASSWORD);
+    await page.click('[data-testid="login-submit"]');
     await expect(page).toHaveURL(/\/dashboard/);
     
     // Navigate to lobby

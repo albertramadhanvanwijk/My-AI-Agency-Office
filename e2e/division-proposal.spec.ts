@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 const OWNER_EMAIL = "owner@myagency.local";
-const OWNER_PASSWORD = "password123";
+const OWNER_PASSWORD = "owner123";
 
 test.describe("Owner Creates Division Proposal → 1-Click Approve → Verify Migration", () => {
   test.beforeEach(async ({ page }) => {
@@ -9,9 +9,9 @@ test.describe("Owner Creates Division Proposal → 1-Click Approve → Verify Mi
     await page.waitForLoadState("networkidle");
     
     // Login as owner
-    await page.fill('input[name="email"]', OWNER_EMAIL);
-    await page.fill('input[name="password"]', OWNER_PASSWORD);
-    await page.click('button[type="submit"]');
+    await page.fill('[data-testid="email-input"]', OWNER_EMAIL);
+    await page.fill('[data-testid="password-input"]', OWNER_PASSWORD);
+    await page.click('[data-testid="login-submit"]');
     await expect(page).toHaveURL(/\/dashboard/);
   });
 

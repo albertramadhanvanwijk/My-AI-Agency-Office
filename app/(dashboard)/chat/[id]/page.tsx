@@ -8,13 +8,13 @@ import { db } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
-export default async function ChatDetailPage({ params }: { params: Promise<{ id: string }> | { id: string } }) {
+export default async function ChatDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await getServerSession(authOptions);
   const user = session?.user as { id: string; role: string } | undefined;
   if (!user?.id) redirect("/login");
   if (user.role !== "OWNER") redirect("/portal");
 
-  const resolvedParams = await Promise.resolve(params);
+  const resolvedParams = await params;
   const conversation = await db.conversation.findUnique({
     where: { id: resolvedParams.id },
     include: { messages: { orderBy: { createdAt: "asc" } } },

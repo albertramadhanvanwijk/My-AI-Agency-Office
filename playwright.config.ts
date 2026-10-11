@@ -38,7 +38,7 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
     env: {
-      DATABASE_URL: process.env.DATABASE_URL || "postgresql://postgres:postgres@localhost:5432/myagency",
+      DATABASE_URL: process.env.DATABASE_URL || "postgresql://postgres.fjiznwpuxwdrrwiasbtu:kantorkuaialbert123@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres",
       NEXTAUTH_URL: "http://localhost:3000",
       NEXTAUTH_SECRET: "test-secret-min-32-chars-long",
       GOOGLE_CLIENT_ID: "test-client-id",

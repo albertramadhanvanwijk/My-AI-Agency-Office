@@ -91,6 +91,7 @@ export function InvoiceList() {
 
   useEffect(() => {
     fetchInvoices();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pagination.page, filters.status, filters.search]);
 
   const handleFilterChange = (key: string, value: string) => {

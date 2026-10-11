@@ -3,9 +3,9 @@ import { test, expect } from "@playwright/test";
 test.describe("Project Workflow E2E", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/login");
-    await page.fill('input[name="email"]', "owner@myagency.local");
-    await page.fill('input[name="password"]', "password123");
-    await page.click('button[type="submit"]');
+    await page.fill('[data-testid="email-input"]', "owner@myagency.local");
+    await page.fill('[data-testid="password-input"]', "owner123");
+    await page.click('[data-testid="login-submit"]');
     await expect(page).toHaveURL("/dashboard");
   });
 

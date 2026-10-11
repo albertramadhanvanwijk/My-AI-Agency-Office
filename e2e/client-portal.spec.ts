@@ -11,9 +11,9 @@ test.describe("Client Login → Portal → Project Detail → Chat → Download 
 
   test("client can login and access portal", async ({ page }) => {
     // Login with credentials
-    await page.fill('input[name="email"]', CLIENT_EMAIL);
-    await page.fill('input[name="password"]', CLIENT_PASSWORD);
-    await page.click('button[type="submit"]');
+    await page.fill('[data-testid="email-input"]', CLIENT_EMAIL);
+    await page.fill('[data-testid="password-input"]', CLIENT_PASSWORD);
+    await page.click('[data-testid="login-submit"]');
     
     // Should redirect to portal
     await expect(page).toHaveURL(/\/portal/);
@@ -22,9 +22,9 @@ test.describe("Client Login → Portal → Project Detail → Chat → Download 
 
   test("client sees only their own projects", async ({ page }) => {
     // Login as client
-    await page.fill('input[name="email"]', CLIENT_EMAIL);
-    await page.fill('input[name="password"]', CLIENT_PASSWORD);
-    await page.click('button[type="submit"]');
+    await page.fill('[data-testid="email-input"]', CLIENT_EMAIL);
+    await page.fill('[data-testid="password-input"]', CLIENT_PASSWORD);
+    await page.click('[data-testid="login-submit"]');
     await expect(page).toHaveURL(/\/portal/);
     
     // Should see project list
@@ -46,9 +46,9 @@ test.describe("Client Login → Portal → Project Detail → Chat → Download 
 
   test("client can chat in project", async ({ page }) => {
     // Login as client
-    await page.fill('input[name="email"]', CLIENT_EMAIL);
-    await page.fill('input[name="password"]', CLIENT_PASSWORD);
-    await page.click('button[type="submit"]');
+    await page.fill('[data-testid="email-input"]', CLIENT_EMAIL);
+    await page.fill('[data-testid="password-input"]', CLIENT_PASSWORD);
+    await page.click('[data-testid="login-submit"]');
     await expect(page).toHaveURL(/\/portal/);
     
     // Navigate to a project
@@ -79,9 +79,9 @@ test.describe("Client Login → Portal → Project Detail → Chat → Download 
 
   test("client can download invoice", async ({ page }) => {
     // Login as client
-    await page.fill('input[name="email"]', CLIENT_EMAIL);
-    await page.fill('input[name="password"]', CLIENT_PASSWORD);
-    await page.click('button[type="submit"]');
+    await page.fill('[data-testid="email-input"]', CLIENT_EMAIL);
+    await page.fill('[data-testid="password-input"]', CLIENT_PASSWORD);
+    await page.click('[data-testid="login-submit"]');
     await expect(page).toHaveURL(/\/portal/);
     
     // Navigate to invoices or project with invoice
@@ -108,9 +108,9 @@ test.describe("Client Login → Portal → Project Detail → Chat → Download 
 
   test("client cannot access other client's project (403)", async ({ page }) => {
     // Login as client
-    await page.fill('input[name="email"]', CLIENT_EMAIL);
-    await page.fill('input[name="password"]', CLIENT_PASSWORD);
-    await page.click('button[type="submit"]');
+    await page.fill('[data-testid="email-input"]', CLIENT_EMAIL);
+    await page.fill('[data-testid="password-input"]', CLIENT_PASSWORD);
+    await page.click('[data-testid="login-submit"]');
     await expect(page).toHaveURL(/\/portal/);
     
     // Get a project ID from the list
