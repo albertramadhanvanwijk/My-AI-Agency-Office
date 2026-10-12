@@ -22,27 +22,22 @@ test.describe("Client Login → Portal → Project Detail → Chat → Download 
   });
 
   test("client sees only their own projects", async ({ page }) => {
-    // Login as client
     await page.fill('[data-testid="email-input"]', CLIENT_EMAIL);
     await page.fill('[data-testid="password-input"]', CLIENT_PASSWORD);
     await page.click('[data-testid="login-submit"]');
-    await expect(page).toHaveURL(/\/portal/);
-    
-    // Should see project list
-    await expect(page.locator("text=My Projects")).toBeVisible();
-    
-    // Click on a project
+    await expect(page).toHaveURL(/\/portal/, { timeout: 15000 });
+
+    await expect(page.locator("text=My Projects")).toBeVisible({ timeout: 10000 });
+    await page.waitForTimeout(800);
     const projectLink = page.locator('a[href*="/portal/projects/"]').first();
-    if (await projectLink.isVisible()) {
-      await projectLink.click();
-      
-      // Should see project detail
-      await expect(page.locator("text=Project Detail")).toBeVisible();
-      
-      // Should see brief, progress, deliverables
-      await expect(page.locator("text=Brief")).toBeVisible();
-      await expect(page.locator("text=Progress")).toBeVisible();
-    }
+    await expect(projectLink).toBeVisible({ timeout: 10000 });
+    await projectLink.click();
+    await page.waitForLoadState("domcontentloaded");
+
+    // Detail page is client-side: heading is project.title, nav has Overview tab
+    await expect(page.locator('button[role="tab"]:has-text("Overview"), text=Project Information').first()).toBeVisible({ timeout: 10000 });
+    // Tabs: Overview / Deliverables / Invoices / Chat — use role-based selectors to avoid strict-mode
+    await expect(page.locator('button[role="tab"]:has-text("Overview")')).toBeVisible({ timeout: 10000 });
   });
 
   test("client can chat in project", async ({ page }) => {
@@ -79,54 +74,73 @@ test.describe("Client Login → Portal → Project Detail → Chat → Download 
   });
 
   test("client can download invoice", async ({ page }) => {
-    // Login as client
     await page.fill('[data-testid="email-input"]', CLIENT_EMAIL);
     await page.fill('[data-testid="password-input"]', CLIENT_PASSWORD);
     await page.click('[data-testid="login-submit"]');
-    await expect(page).toHaveURL(/\/portal/);
-    
-    // Navigate to invoices or project with invoice
-    const invoiceLink = page.locator('a:has-text("Invoice"), a:has-text("Invoices")').first();
-    if (await invoiceLink.isVisible()) {
-      await invoiceLink.click();
-      
-      // Should see invoice list or detail
-      await expect(page.locator("text=Invoice")).toBeVisible();
-      
-      // Click download
-      const downloadButton = page.locator('button:has-text("Download"), a:has-text("Download")').first();
-      if (await downloadButton.isVisible()) {
-        // Set up download handler
-        const downloadPromise = page.waitForEvent("download");
-        await downloadButton.click();
-        const download = await downloadPromise;
-        
-        // Verify it's a PDF
-        expect(download.suggestedFilename()).toMatch(/\.pdf$/i);
-      }
+    await expect(page).toHaveURL(/\/portal/, { timeout: 15000 });
+    await page.waitForTimeout(800);
+
+    // Open first project then go to Invoices tab — avoids ambiguous "Invoice" text (4 matches)
+    const projectLink = page.locator('a[href*="/portal/projects/"]').first();
+    await expect(projectLink).toBeVisible({ timeout: 10000 });
+    await projectLink.click();
+    await page.waitForLoadState("domcontentloaded");
+    await expect(page.locator('button[role="tab"]:has-text("Overview")')).toBeVisible({ timeout: 10000 });
+    await page.click('button[role="tab"]:has-text("Invoices")');
+    await page.waitForTimeout(600);
+    // Either invoice list or empty state — both valid
+    await expect(page.locator('text=Invoices').first()).toBeVisible({ timeout: 10000 });
+    const downloadButton = page.locator('button:has-text("Download"), a:has-text("Download")').first();
+    if (await downloadButton.isVisible().catch(() => false)) {
+      const downloadPromise = page.waitForEvent("download");
+      await downloadButton.click();
+      const download = await downloadPromise;
+      expect(download.suggestedFilename()).toMatch(/\.pdf$/i);
     }
   });
 
   test("client cannot access other client's project (403)", async ({ page }) => {
-    // Login as client
+    // Login as CLIENT — must now see own projects (fixed: Client.id via User.id)
     await page.fill('[data-testid="email-input"]', CLIENT_EMAIL);
     await page.fill('[data-testid="password-input"]', CLIENT_PASSWORD);
     await page.click('[data-testid="login-submit"]');
-    await expect(page).toHaveURL(/\/portal/);
-    
-    // Get a project ID from the list
+    await expect(page).toHaveURL(/\/portal/, { timeout: 15000 });
+    await expect(page.locator("text=My Projects")).toBeVisible({ timeout: 10000 });
+    // Ensure at least one real project exists; if seeded first run may be slow, wait longer
+    await page.waitForTimeout(800);
     const projectLink = page.locator('a[href*="/portal/projects/"]').first();
-    if (await projectLink.isVisible()) {
-      const href = await projectLink.getAttribute("href");
-      if (href) {
-        // Try to access a different project ID (tampering)
-        const tamperedUrl = href.replace(/\/portal\/projects\/[^/]+/, "/portal/projects/different-id");
-        await page.goto(tamperedUrl);
-        
-        // Should get 403 or redirect, not 404 (which would leak existence)
-        const response = await page.waitForResponse(r => r.url().includes("/portal/projects/"));
-        expect([403, 404, 302]).toContain(response.status());
-      }
+    // After fix, CLIENT now sees N>0 projects. Fallback: tamper via direct API if link slow
+    let href: string | null = null;
+    try {
+      await expect(projectLink).toBeVisible({ timeout: 10000 });
+      href = await projectLink.getAttribute("href");
+    } catch {
+      // Fallback: still test tamper even if list slow — use API to get an id
+      const ids = await page.evaluate(async () => {
+        const r = await fetch("/api/portal/projects", { credentials: "include" });
+        const j = await r.json().catch(() => ({ projects: [] }));
+        return (j.projects || []).map((p: { id: string }) => p.id) as string[];
+      });
+      if (ids.length) href = `/portal/projects/${ids[0]}`;
+    }
+    expect(href).toBeTruthy();
+    if (!href) return;
+
+    const tamperedUrl = href.replace(/\/portal\/projects\/[^/]+/, "/portal/projects/00000000-0000-4000-a000-000000000000");
+    const respPromise = page.waitForResponse(r => r.url().includes("/api/portal/projects/") || r.url().includes("/portal/projects/"), { timeout: 15000 }).catch(() => null);
+    await page.goto(tamperedUrl, { waitUntil: "domcontentloaded" });
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(500);
+    const denied = page.locator("text=Access denied, text=Access Denied, text=Project not found");
+    if (await denied.first().isVisible().catch(() => false)) {
+      await expect(denied.first()).toBeVisible();
+      return;
+    }
+    const resp = await respPromise;
+    if (resp) {
+      expect([403, 404, 302]).toContain(resp.status());
+    } else {
+      await expect(page.locator("text=Access denied, text=Access Denied, text=Project not found, text=Back to Projects, text=Back to Portal").first()).toBeVisible({ timeout: 10000 });
     }
   });
 });

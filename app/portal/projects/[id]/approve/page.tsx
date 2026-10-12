@@ -25,9 +25,14 @@ export default async function PortalApproveGatePage({
   });
   if (!project) notFound();
 
-  // Portal: only OWNER or the owning CLIENT may approve
+  // Portal: only OWNER or the owning CLIENT may approve (resolve Client.id via User.id)
   const isOwner = session.user.role === "OWNER";
-  const isClientOwner = project.clientId === (session.user as unknown as { id: string }).id;
+  let isClientOwner = false;
+  const sid = (session.user as unknown as { id: string }).id;
+  if (sid) {
+    const c = await db.client.findUnique({ where: { userId: sid }, select: { id: true } });
+    if (c && project.clientId === c.id) isClientOwner = true;
+  }
   // Also allow by email match for seed where user.id may be different
   const sessionEmail = (session.user as unknown as { email?: string }).email;
   const clientEmail = project.client?.user?.email;

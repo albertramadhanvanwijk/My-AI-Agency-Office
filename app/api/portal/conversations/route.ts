@@ -19,6 +19,13 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "projectId required" }, { status: 400 });
     }
 
+    let clientIdForCheck: string | null = null;
+    if (!isOwner) {
+      const c = await db.client.findUnique({ where: { userId: user.id }, select: { id: true } });
+      if (!c) return NextResponse.json({ error: "Access denied" }, { status: 403 });
+      clientIdForCheck = c.id;
+    }
+
     // Verify project access
     const project = await db.project.findUnique({
       where: { id: projectId },
@@ -29,7 +36,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
 
-    if (!isOwner && project.clientId !== user.id) {
+    if (!isOwner && project.clientId !== clientIdForCheck) {
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
@@ -121,8 +128,11 @@ export async function POST(req: NextRequest) {
     }
 
     const isOwner = user.role === "OWNER";
-    if (!isOwner && project.clientId !== user.id) {
-      return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    if (!isOwner) {
+      const c = await db.client.findUnique({ where: { userId: user.id }, select: { id: true } });
+      if (!c || project.clientId !== c.id) {
+        return NextResponse.json({ error: "Access denied" }, { status: 403 });
+      }
     }
 
     // Create conversation

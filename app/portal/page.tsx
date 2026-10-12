@@ -48,9 +48,14 @@ const invoiceStatusColors: Record<string, string> = {
 
 async function getUserProjects(userId: string, role: "OWNER" | "CLIENT") {
   const isOwner = role === "OWNER";
-  
+  let clientId: string | null = null;
+  if (!isOwner) {
+    const c = await db.client.findUnique({ where: { userId }, select: { id: true } });
+    if (!c) return [];
+    clientId = c.id;
+  }
   return db.project.findMany({
-    where: isOwner ? {} : { clientId: userId },
+    where: isOwner ? {} : { clientId: clientId! },
     orderBy: { updatedAt: "desc" },
     include: {
       client: { select: { company: true, name: true } },

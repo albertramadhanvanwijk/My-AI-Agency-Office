@@ -26,9 +26,12 @@ export async function POST(
       return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
     }
 
-    // Check access
-    if (!isOwner && invoice.clientId !== user.id) {
-      return NextResponse.json({ error: "Access denied" }, { status: 403 });
+    // Check access — resolve Client.id via User.id
+    if (!isOwner) {
+      const c = await db.client.findUnique({ where: { userId: user.id }, select: { id: true } });
+      if (!c || invoice.clientId !== c.id) {
+        return NextResponse.json({ error: "Access denied" }, { status: 403 });
+      }
     }
 
     // For MVP, return the pdfUrl directly (in production, generate signed URL)

@@ -13,8 +13,15 @@ export async function GET(req: NextRequest) {
     const user = session.user as { id: string; role: "OWNER" | "CLIENT" };
     const isOwner = user.role === "OWNER";
 
+    let clientId: string | null = null;
+    if (!isOwner) {
+      const client = await db.client.findUnique({ where: { userId: user.id }, select: { id: true } });
+      if (!client) return NextResponse.json({ projects: [] });
+      clientId = client.id;
+    }
+
     const projects = await db.project.findMany({
-      where: isOwner ? {} : { clientId: user.id },
+      where: isOwner ? {} : { clientId: clientId! },
       orderBy: { updatedAt: "desc" },
       include: {
         client: { select: { company: true, name: true } },

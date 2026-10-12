@@ -34,9 +34,12 @@ export async function GET(
     return NextResponse.json({ error: "Project not found" }, { status: 404 });
   }
 
-  // Check access: owner can see all, client can only see their own
-  if (session.user.role !== "OWNER" && project.clientId !== session.user.id) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  // Check access: owner can see all, client can only see their own (Client.id via User.id)
+  if (session.user.role !== "OWNER") {
+    const c = await db.client.findUnique({ where: { userId: session.user.id }, select: { id: true } });
+    if (!c || project.clientId !== c.id) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
   }
 
   return NextResponse.json(project);

@@ -10,14 +10,15 @@ export default async function ProjectsPage() {
   if (!session?.user) redirect("/login");
 
   const isOwner = session.user.role === "OWNER";
-
+  let where: Record<string, unknown> = {};
+  if (!isOwner) {
+    const c = await db.client.findUnique({ where: { userId: session.user.id }, select: { id: true } });
+    where = c ? { clientId: c.id } : { clientId: "__no_client__" };
+  }
   const projects = await db.project.findMany({
-    where: isOwner ? {} : { clientId: session.user.id },
+    where,
     orderBy: { createdAt: "desc" },
-    include: {
-      client: { select: { company: true, name: true } },
-      _count: { select: { tasks: true } },
-    },
+    include: { client: { select: { company: true, name: true } }, _count: { select: { tasks: true } } },
   });
 
   const statusLabels: Record<string, string> = {

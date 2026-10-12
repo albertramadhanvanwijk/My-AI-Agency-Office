@@ -17,6 +17,13 @@ export async function GET(
     const isOwner = user.role === "OWNER";
     const { id } = await params;
 
+    let clientId: string | null = null;
+    if (!isOwner) {
+      const c = await db.client.findUnique({ where: { userId: user.id }, select: { id: true } });
+      if (!c) return NextResponse.json({ error: "Access denied" }, { status: 403 });
+      clientId = c.id;
+    }
+
     const project = await db.project.findUnique({
       where: { id },
       include: {
@@ -51,7 +58,7 @@ export async function GET(
     }
 
     // Check access: CLIENT can only access their own projects
-    if (!isOwner && project.clientId !== user.id) {
+    if (!isOwner && project.clientId !== clientId) {
       return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
 
