@@ -34,10 +34,9 @@ test.describe("Client Login → Portal → Project Detail → Chat → Download 
     await projectLink.click();
     await page.waitForLoadState("domcontentloaded");
 
-    // Detail page is client-side: heading is project.title, nav has Overview tab
-    await expect(page.locator('button[role="tab"]:has-text("Overview"), text=Project Information').first()).toBeVisible({ timeout: 10000 });
-    // Tabs: Overview / Deliverables / Invoices / Chat — use role-based selectors to avoid strict-mode
-    await expect(page.locator('button[role="tab"]:has-text("Overview")')).toBeVisible({ timeout: 10000 });
+    // Detail page is client-side: wait for API fetch to resolve then check Overview tab
+    await expect(page.getByRole("tab", { name: "Overview" })).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText("Project Information").first()).toBeVisible({ timeout: 10000 });
   });
 
   test("client can chat in project", async ({ page }) => {
@@ -85,11 +84,11 @@ test.describe("Client Login → Portal → Project Detail → Chat → Download 
     await expect(projectLink).toBeVisible({ timeout: 10000 });
     await projectLink.click();
     await page.waitForLoadState("domcontentloaded");
-    await expect(page.locator('button[role="tab"]:has-text("Overview")')).toBeVisible({ timeout: 10000 });
-    await page.click('button[role="tab"]:has-text("Invoices")');
+    await expect(page.getByRole("tab", { name: "Overview" })).toBeVisible({ timeout: 15000 });
+    await page.getByRole("tab", { name: "Invoices" }).click();
     await page.waitForTimeout(600);
     // Either invoice list or empty state — both valid
-    await expect(page.locator('text=Invoices').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText("Invoices").first()).toBeVisible({ timeout: 10000 });
     const downloadButton = page.locator('button:has-text("Download"), a:has-text("Download")').first();
     if (await downloadButton.isVisible().catch(() => false)) {
       const downloadPromise = page.waitForEvent("download");
@@ -127,20 +126,20 @@ test.describe("Client Login → Portal → Project Detail → Chat → Download 
     if (!href) return;
 
     const tamperedUrl = href.replace(/\/portal\/projects\/[^/]+/, "/portal/projects/00000000-0000-4000-a000-000000000000");
-    const respPromise = page.waitForResponse(r => r.url().includes("/api/portal/projects/") || r.url().includes("/portal/projects/"), { timeout: 15000 }).catch(() => null);
+    const apiRespPromise = page.waitForResponse((r) => r.url().includes("/api/portal/projects/"), { timeout: 15000 }).catch(() => null);
     await page.goto(tamperedUrl, { waitUntil: "domcontentloaded" });
     await page.waitForLoadState("domcontentloaded");
-    await page.waitForTimeout(500);
-    const denied = page.locator("text=Access denied, text=Access Denied, text=Project not found");
+    await page.waitForTimeout(1200);
+    const denied = page.getByText(/Access denied|Project not found/i);
     if (await denied.first().isVisible().catch(() => false)) {
       await expect(denied.first()).toBeVisible();
       return;
     }
-    const resp = await respPromise;
-    if (resp) {
-      expect([403, 404, 302]).toContain(resp.status());
+    const apiResp = await apiRespPromise;
+    if (apiResp) {
+      expect([403, 404]).toContain(apiResp.status());
     } else {
-      await expect(page.locator("text=Access denied, text=Access Denied, text=Project not found, text=Back to Projects, text=Back to Portal").first()).toBeVisible({ timeout: 10000 });
+      await expect(page.getByText(/Access Denied|Back to Projects|Back to Portal/i).first()).toBeVisible({ timeout: 10000 });
     }
   });
 });
