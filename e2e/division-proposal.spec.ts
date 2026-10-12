@@ -5,27 +5,28 @@ const OWNER_PASSWORD = "owner123";
 
 test.describe("Owner Creates Division Proposal → 1-Click Approve → Verify Migration", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/login");
-    await page.waitForLoadState("networkidle");
+    await page.goto("/login", { waitUntil: "domcontentloaded" });
     
     // Login as owner
     await page.fill('[data-testid="email-input"]', OWNER_EMAIL);
     await page.fill('[data-testid="password-input"]', OWNER_PASSWORD);
     await page.click('[data-testid="login-submit"]');
-    await expect(page).toHaveURL(/\/dashboard/);
+    await expect(page).toHaveURL(/\/lobby/);
   });
 
   test("owner can view proposals list", async ({ page }) => {
-    await page.goto("/proposals");
-    await expect(page.locator("h1")).toContainText("Proposals");
+    await page.goto("/proposals", { waitUntil: "domcontentloaded" });
+    await expect(page.locator("main h1")).toContainText("Proposals");
     
-    // Should see proposal cards or table
-    await expect(page.locator("text=Pending")).toBeVisible();
+    // Should see proposal tabs (Pending, Approved, Rejected)
+    await expect(page.locator('[role="tab"]:has-text("Pending")')).toBeVisible();
+    await expect(page.locator('[role="tab"]:has-text("Approved")')).toBeVisible();
+    await expect(page.locator('[role="tab"]:has-text("Rejected")')).toBeVisible();
   });
 
   test("owner can approve division proposal with 1-click", async ({ page }) => {
     await page.goto("/proposals");
-    await expect(page.locator("h1")).toContainText("Proposals");
+    await expect(page.locator("main h1")).toContainText("Proposals");
     
     // Find a pending division proposal
     const pendingProposal = page.locator('[data-testid="proposal-card"]:has-text("division"), .proposal-card:has-text("division"), article:has-text("division")').first();
@@ -35,7 +36,7 @@ test.describe("Owner Creates Division Proposal → 1-Click Approve → Verify Mi
       await pendingProposal.click();
       
       // Should be on proposal detail page
-      await expect(page.locator("h1")).toContainText("New Division");
+      await expect(page.locator("main h1")).toContainText("New Division");
       
       // Click approve button
       await page.click('button:has-text("Approve Proposal")');
@@ -85,7 +86,7 @@ test.describe("Owner Creates Division Proposal → 1-Click Approve → Verify Mi
 
   test("owner can create new division proposal from organization page", async ({ page }) => {
     await page.goto("/organization");
-    await expect(page.locator("h1")).toContainText("Organization");
+    await expect(page.locator("main h1")).toContainText("Organization");
     
     // Look for add division button
     const addDivisionButton = page.locator('button:has-text("Add Division"), a:has-text("Add Division")').first();

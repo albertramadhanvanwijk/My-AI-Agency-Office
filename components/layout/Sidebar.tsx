@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import {
-  LayoutDashboard,
   DoorOpen,
   FolderKanban,
   MessageSquare,
@@ -105,9 +104,6 @@ export default function Sidebar({ divisions, className }: SidebarProps) {
         </p>
         <NavLink href="/lobby" active={isActive("/lobby")}>
           <DoorOpen className="h-4 w-4 shrink-0" /> Lobby
-        </NavLink>
-        <NavLink href="/dashboard" active={pathname === "/dashboard"}>
-          <LayoutDashboard className="h-4 w-4 shrink-0" /> Dashboard
         </NavLink>
         <NavLink href="/projects" active={isActive("/projects")}>
           <FolderKanban className="h-4 w-4 shrink-0" /> Projects

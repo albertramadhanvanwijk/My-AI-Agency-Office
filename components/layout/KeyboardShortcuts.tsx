@@ -11,7 +11,6 @@ import {
   Search,
   HelpCircle,
   Plus,
-  LayoutDashboard,
   FolderKanban,
   MessageSquare,
   FileText,
@@ -43,15 +42,14 @@ const SHORTCUTS: Shortcut[] = [
   { key: "⌘ ⇧ N", description: "New Task", category: "Actions", action: () => {} },
   { key: "⌘ B", description: "Toggle Sidebar", category: "Layout", action: () => {} },
   { key: "1", description: "Go to Lobby", category: "Go To", action: () => {} },
-  { key: "2", description: "Go to Dashboard", category: "Go To", action: () => {} },
-  { key: "3", description: "Go to Projects", category: "Go To", action: () => {} },
-  { key: "4", description: "Go to Chat", category: "Go To", action: () => {} },
-  { key: "5", description: "Go to Proposals", category: "Go To", action: () => {} },
-  { key: "6", description: "Go to Organization", category: "Go To", action: () => {} },
+  { key: "2", description: "Go to Projects", category: "Go To", action: () => {} },
+  { key: "3", description: "Go to Chat", category: "Go To", action: () => {} },
+  { key: "4", description: "Go to Proposals", category: "Go To", action: () => {} },
+  { key: "5", description: "Go to Organization", category: "Go To", action: () => {} },
   { key: "G L", description: "Go to Lobby", category: "Go To (Vim-style)", action: () => {} },
-  { key: "G D", description: "Go to Dashboard", category: "Go To (Vim-style)", action: () => {} },
   { key: "G P", description: "Go to Projects", category: "Go To (Vim-style)", action: () => {} },
   { key: "G C", description: "Go to Chat", category: "Go To (Vim-style)", action: () => {} },
+  { key: "G O", description: "Go to Organization", category: "Go To (Vim-style)", action: () => {} },
   { key: "Esc", description: "Close Modal / Clear Search", category: "General", action: () => {} },
 ];
 
@@ -116,9 +114,9 @@ export function KeyboardShortcuts() {
         return;
       }
 
-      // Number keys 1-6 for navigation
-      if (e.key >= "1" && e.key <= "6") {
-        const routes = ["/lobby", "/dashboard", "/projects", "/chat", "/proposals", "/organization"];
+      // Number keys 1-5 for navigation
+      if (e.key >= "1" && e.key <= "5") {
+        const routes = ["/lobby", "/projects", "/chat", "/proposals", "/organization"];
         const route = routes[parseInt(e.key) - 1];
         if (route) {
           window.location.href = route;

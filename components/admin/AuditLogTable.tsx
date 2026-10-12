@@ -20,11 +20,22 @@ import {
   Calendar,
   Database
 } from "lucide-react";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, isValid } from "date-fns";
 import { AuditLogQuery, AuditLogResponse, getAuditLogsAction, exportAuditLogsCSVAction } from "@/modules/admin/actions";
 import { AuditLogEntry } from "@/modules/admin/schema";
 import { AuditLogFilters } from "./AuditLogFilters";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+
+function safeFormat(dateValue: string | Date | null | undefined, formatStr: string): string {
+  if (!dateValue) return "—";
+  try {
+    const date = dateValue instanceof Date ? dateValue : new Date(dateValue);
+    if (!isValid(date)) return "Invalid date";
+    return format(date, formatStr);
+  } catch {
+    return "Invalid date";
+  }
+}
 
 interface AuditLogTableProps {
   initialData: AuditLogResponse;
@@ -181,7 +192,7 @@ export default function AuditLogTable({ initialData, initialQuery }: AuditLogTab
                       <TableCell className="text-sm">
                         <div className="flex items-center gap-1">
                           <Calendar className="h-3 w-3 text-muted-foreground" />
-                          {format(parseISO(log.createdAt.toString()), "MMM d, HH:mm")}
+                          {safeFormat(log.createdAt, "MMM d, HH:mm")}
                         </div>
                       </TableCell>
                       <TableCell className="text-sm font-mono text-xs">{log.who}</TableCell>
@@ -270,7 +281,7 @@ export default function AuditLogTable({ initialData, initialQuery }: AuditLogTab
                 </div>
                 <div>
                   <Label className="text-muted-foreground">Created At</Label>
-                  <p>{format(parseISO(selectedLog.createdAt.toString()), "PPpp")}</p>
+                  <p>{safeFormat(selectedLog.createdAt, "PPpp")}</p>
                 </div>
                 <div>
                   <Label className="text-muted-foreground">Actor (who)</Label>

@@ -136,12 +136,12 @@ describe("auth — Task 3 (Google + Credentials + role guards)", () => {
     expect(bad).toBeNull();
   });
 
-  it("middleware redirects unauthenticated /dashboard to /login", async () => {
+  it("middleware redirects unauthenticated /projects to /login", async () => {
     const { getToken } = await import("next-auth/jwt");
     (getToken as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(null);
 
     const { middleware } = await import("@/middleware");
-    const req = makeRequest("/dashboard");
+    const req = makeRequest("/projects");
     const res = await middleware(req as unknown as Parameters<typeof middleware>[0]);
     // NextResponse.redirect -> status 307/308 and Location contains /login
     expect(res.status).toBeGreaterThanOrEqual(300);
@@ -150,28 +150,28 @@ describe("auth — Task 3 (Google + Credentials + role guards)", () => {
     expect(loc).toMatch(/\/login/);
   });
 
-  it("CLIENT cannot access /dashboard (403/redirect to /portal or /login)", async () => {
+  it("CLIENT cannot access /projects (redirect to /portal or /login)", async () => {
     const { getToken } = await import("next-auth/jwt");
     (getToken as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({ role: "CLIENT", email: "client@test.com", sub: "c1" });
 
     const { middleware } = await import("@/middleware");
-    const req = makeRequest("/dashboard/projects");
+    const req = makeRequest("/projects");
     const res = await middleware(req as unknown as Parameters<typeof middleware>[0]);
     expect(res.status).toBeGreaterThanOrEqual(300);
     expect(res.status).toBeLessThan(400);
     const loc = (res.headers.get("location") || res.headers.get("Location") || "").toString();
-    // must not allow through (not 200) and should redirect away from dashboard
-    expect(loc).not.toMatch(/\/dashboard/);
+    // must not allow through (not 200) and should redirect away from projects
+    expect(loc).not.toMatch(/\/projects/);
     // acceptable targets are /login or /portal
     expect(loc).toMatch(/\/login|\/portal/);
   });
 
-  it("OWNER can access /dashboard (next)", async () => {
+  it("OWNER can access /projects (next)", async () => {
     const { getToken } = await import("next-auth/jwt");
     (getToken as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({ role: "OWNER", email: "owner@test.com", sub: "o1" });
 
     const { middleware } = await import("@/middleware");
-    const req = makeRequest("/dashboard");
+    const req = makeRequest("/projects");
     const res = await middleware(req as unknown as Parameters<typeof middleware>[0]);
     // NextResponse.next() returns 200-ish with x-middleware-next header or empty redirect
     // It should NOT be a redirect to login

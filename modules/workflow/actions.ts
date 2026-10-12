@@ -13,8 +13,9 @@ import {
   requestRevision,
   closeProject,
   checkDivisionCapability,
+  createTask,
 } from "./service";
-import { CreateProjectInput, ApproveGateInput, DispatchTaskInput, RevisionInput } from "./schema";
+import { CreateProjectInput, ApproveGateInput, DispatchTaskInput, RevisionInput, CreateTaskInput } from "./schema";
 import { z } from "zod";
 import { db } from "@/lib/db";
 
@@ -91,4 +92,14 @@ export async function checkDivisionCapabilityAction(divisionName: string) {
   if (!session?.user) redirect("/login");
 
   return checkDivisionCapability(divisionName);
+}
+
+export async function createTaskAction(input: z.infer<typeof CreateTaskInput>) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) redirect("/login");
+
+  const parsed = CreateTaskInput.parse(input);
+  const task = await createTask(parsed);
+  revalidatePath(`/projects/${parsed.projectId}`);
+  return task;
 }

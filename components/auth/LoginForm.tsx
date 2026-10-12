@@ -7,7 +7,7 @@ import { signIn } from "next-auth/react";
 export default function LoginForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  const callbackUrl = searchParams.get("callbackUrl") || "/lobby";
   const errorParam = searchParams.get("error");
 
   const [email, setEmail] = useState("");
@@ -33,17 +33,17 @@ export default function LoginForm() {
     setLoading(true);
     setError(null);
     try {
-      const res = await signIn("credentials", {
+      // Use redirect: false to handle redirect manually - more reliable in client components
+      const result = await signIn("credentials", {
         email,
         password,
         redirect: false,
         callbackUrl,
       });
-      if (res?.error) {
+      if (result?.error) {
         setError("Email atau password salah.");
-        return;
-      }
-      if (res?.ok) {
+      } else {
+        // Successful login - redirect to callbackUrl
         router.push(callbackUrl);
         router.refresh();
       }

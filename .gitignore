@@ -52,3 +52,10 @@ coverage
 
 # Storage local
 uploads
+
+# Playwright & local test artifacts (do not commit)
+playwright-report/
+test-results/
+test_out.txt
+test_output.txt
+test-db.mjs

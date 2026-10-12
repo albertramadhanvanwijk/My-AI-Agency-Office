@@ -72,7 +72,6 @@ export async function middleware(req: NextRequest) {
   // Allow static assets
   if (pathname.startsWith("/_next") || pathname.includes(".")) {
     const isProtectedPrefix =
-      pathname.startsWith("/dashboard") ||
       pathname.startsWith("/portal") ||
       pathname.startsWith("/api/") ||
       pathname.startsWith("/lobby") ||
@@ -84,7 +83,6 @@ export async function middleware(req: NextRequest) {
   }
 
   const isProtectedDashboard =
-    pathname.startsWith("/dashboard") ||
     pathname.startsWith("/lobby") ||
     pathname.startsWith("/projects") ||
     pathname.startsWith("/chat") ||
@@ -154,7 +152,6 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/dashboard/:path*",
     "/portal/:path*",
     "/api/:path*",
     "/lobby",

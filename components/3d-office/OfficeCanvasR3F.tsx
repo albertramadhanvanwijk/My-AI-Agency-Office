@@ -109,12 +109,14 @@ export default function OfficeCanvasR3F({
 
   return (
     <Canvas
-      shadows
-      dpr={[1, 1.5]}
-      gl={{ antialias: true, alpha: true }}
+      shadows={false}
+      dpr={1}
+      frameloop="demand"
+      performance={{ min: 0.5 }}
+      gl={{ antialias: false, alpha: true, powerPreference: "low-power", preserveDrawingBuffer: false }}
       style={{ background: "transparent" }}
       onCreated={({ gl }) => {
-        // Keep renderer lightweight
+        // Keep renderer lightweight - single render, no continuous loop
         gl.setClearColor("#fdf8f0", 0);
       }}
     >

@@ -20,7 +20,7 @@ async function isHealthOk(request: { get: (url: string) => Promise<{ ok: () => b
 async function login(page: Page, email: string, passwords: string[]): Promise<boolean> {
   for (const pw of passwords) {
     await page.goto("/login");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
     await page.fill('[data-testid="email-input"]', email);
     await page.fill('[data-testid="password-input"]', pw);
     await page.click('[data-testid="login-submit"]');
@@ -40,7 +40,7 @@ async function login(page: Page, email: string, passwords: string[]): Promise<bo
 async function logoutIfNeeded(page: Page) {
   try {
     await page.goto("/login");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
   } catch {
     // ignore
   }
@@ -72,7 +72,7 @@ test.describe("MVP End-to-End Smoke — Lobby + Company Profile + Website Flow",
 
     // Navigate to lobby explicitly
     await page.goto("/lobby");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // Tolerant: lobby may be under /(dashboard)/lobby
     if (page.url().includes("/login")) {
@@ -140,7 +140,7 @@ test.describe("MVP End-to-End Smoke — Lobby + Company Profile + Website Flow",
     // Attempt to create project via UI at /projects/new (OWNER path)
     // Navigate to /projects — if not accessible, try portal
     await page.goto("/projects");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // If redirected to login or portal, handle tolerance
     if (page.url().includes("/login")) {
@@ -166,7 +166,7 @@ test.describe("MVP End-to-End Smoke — Lobby + Company Profile + Website Flow",
       const submit = page.locator('button[type="submit"]:has-text("Create"), button:has-text("Create Project"), button[type="submit"]').first();
       if (await submit.isVisible().catch(() => false)) {
         await submit.click();
-        await page.waitForLoadState("networkidle");
+        await page.waitForLoadState("domcontentloaded");
         // Should redirect to project detail or list
         await expect(page).toHaveURL(/\/(projects|portal)/, { timeout: 15000 });
       }
@@ -179,7 +179,7 @@ test.describe("MVP End-to-End Smoke — Lobby + Company Profile + Website Flow",
         await logoutIfNeeded(page);
         await login(page, CLIENT_EMAIL, [CLIENT_PASSWORD]);
         await page.goto("/portal");
-        await page.waitForLoadState("networkidle");
+        await page.waitForLoadState("domcontentloaded");
         const portalProject = page.locator(`text=${PROJECT_TITLE}`).first();
         const portalHas = await portalProject.isVisible().catch(() => false);
         // Tolerant: if not seeded, soft pass — seed-demo.ts should create it
@@ -217,7 +217,7 @@ test.describe("MVP End-to-End Smoke — Lobby + Company Profile + Website Flow",
         await page.goto("/projects");
       }
     }
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // Find Company Profile + Website project link
     const projectLink = page.locator(`a:has-text("${PROJECT_TITLE}"), a[href*="/portal/projects/"], a[href*="/projects/"]`).first();
@@ -230,7 +230,7 @@ test.describe("MVP End-to-End Smoke — Lobby + Company Profile + Website Flow",
     }
 
     await projectLink.click();
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // Detail page should show brief / progress / status
     const detailHeading = page.locator("h1").first();
@@ -244,7 +244,7 @@ test.describe("MVP End-to-End Smoke — Lobby + Company Profile + Website Flow",
         const btn = gateButtons.nth(i);
         if (await btn.isVisible().catch(() => false)) {
           await btn.click();
-          await page.waitForLoadState("networkidle");
+          await page.waitForLoadState("domcontentloaded");
           // Confirm approve (if modal)
           const confirm = page.locator('button:has-text("Confirm"), button:has-text("Approve")').last();
           if (await confirm.isVisible().catch(() => false)) {
@@ -254,7 +254,7 @@ test.describe("MVP End-to-End Smoke — Lobby + Company Profile + Website Flow",
           // Navigate back to project if needed
           if (page.url().includes("/approve") || page.url().includes("/gate")) {
             await page.goBack();
-            await page.waitForLoadState("networkidle");
+            await page.waitForLoadState("domcontentloaded");
           }
         }
       }
@@ -333,7 +333,7 @@ test.describe("MVP End-to-End Smoke — Lobby + Company Profile + Website Flow",
       await page.goto("/portal");
       if (page.url().includes("/login")) await page.goto("/projects");
     }
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     const projectLink = page.locator(`a:has-text("${PROJECT_TITLE}"), a[href*="/portal/projects/"], a[href*="/projects/"]`).first();
     if (!(await projectLink.isVisible().catch(() => false))) {
@@ -341,7 +341,7 @@ test.describe("MVP End-to-End Smoke — Lobby + Company Profile + Website Flow",
       return;
     }
     await projectLink.click();
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // Invoices tab — invoice should be generated after approval/delivery
     const invoicesTab = page.locator('button:has-text("Invoices"), a:has-text("Invoices"), text=Invoices').first();
@@ -424,7 +424,7 @@ test.describe("MVP End-to-End Smoke — Lobby + Company Profile + Website Flow",
     if (!loggedIn) test.skip(true, "client login failed — skipping");
 
     await page.goto("/portal");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     const projectLink = page.locator('a[href*="/portal/projects/"]').first();
     if (!(await projectLink.isVisible().catch(() => false))) {
@@ -438,7 +438,7 @@ test.describe("MVP End-to-End Smoke — Lobby + Company Profile + Website Flow",
     }
     const tampered = href.replace(/\/portal\/projects\/[^/]+/, "/portal/projects/00000000-0000-0000-0000-000000000000");
     await page.goto(tampered);
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
     // Should see Access Denied / 403-like message, not leak existence via 404 only path
     const bodyText = await page.textContent("body").catch(() => "");
     const hasGuard = /Access Denied|denied|not have permission|403/i.test(bodyText ?? "");

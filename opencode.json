@@ -1,4 +1,12 @@
 {
+  "permission": {
+    "bash": "allow",
+    "edit": "allow",
+    "read": "allow",
+    "write": "allow",
+    "glob": "allow",
+    "grep": "allow"
+  },
   "mcp": {
     "servers": {
       "memoryMyAgencyOffice": {

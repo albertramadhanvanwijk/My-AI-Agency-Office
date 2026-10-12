@@ -146,3 +146,15 @@ export async function checkDivisionCapability(divisionName: string) {
 
   return { hasCapability: true, division };
 }
+
+export async function createTask(input: { projectId: string; title: string; description: string; assigneeRoleId: string; stage: string }) {
+  return db.task.create({
+    data: {
+      projectId: input.projectId,
+      stage: input.stage,
+      status: "todo",
+      assigneeRoleId: input.assigneeRoleId,
+      payload: { title: input.title, description: input.description },
+    },
+  });
+}

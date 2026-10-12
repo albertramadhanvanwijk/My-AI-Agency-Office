@@ -4,14 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { signOut } from "next-auth/react";
 import { LogOut, Menu, Building2, Users, FolderOpen } from "lucide-react";
+import { HeaderUser, sessionToHeaderUser } from "@/lib/header-user";
 
-export type HeaderUser = {
-  name?: string | null;
-  email?: string | null;
-  image?: string | null;
-  role: "OWNER" | "CLIENT";
-  id?: string;
-};
+export type { HeaderUser };
 
 type HeaderProps = {
   user?: HeaderUser | null;
@@ -121,20 +116,4 @@ export default function Header({
       </div>
     </header>
   );
-}
-
-// Helper for server components — shape of session to header user
-export function sessionToHeaderUser(
-  session: { user?: { name?: string | null; email?: string | null; image?: string | null; role?: string; id?: string } } | null
-): HeaderUser | null {
-  if (!session?.user) return null;
-  const role = session.user.role as "OWNER" | "CLIENT" | undefined;
-  if (role !== "OWNER" && role !== "CLIENT") return null;
-  return {
-    name: session.user.name ?? null,
-    email: session.user.email ?? null,
-    image: session.user.image ?? null,
-    role,
-    id: session.user.id,
-  };
 }

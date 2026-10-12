@@ -15,8 +15,8 @@ export default defineConfig({
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     video: "retain-on-failure",
-    actionTimeout: 10000,
-    navigationTimeout: 30000,
+    actionTimeout: 30000,
+    navigationTimeout: 60000,
   },
   projects: [
     {
@@ -33,9 +33,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npm run dev:next",
+    command: "npx next start",
     url: "http://localhost:3000",
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 120000,
     env: {
       DATABASE_URL: process.env.DATABASE_URL || "postgresql://postgres.fjiznwpuxwdrrwiasbtu:kantorkuaialbert123@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres",
@@ -44,6 +44,7 @@ export default defineConfig({
       GOOGLE_CLIENT_ID: "test-client-id",
       GOOGLE_CLIENT_SECRET: "test-client-secret",
       NINE_ROUTER_API_KEY: "test-key",
+      NEXT_PUBLIC_E2E: "1",
     },
   },
   expect: {

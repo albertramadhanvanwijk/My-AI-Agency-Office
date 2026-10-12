@@ -1,9 +1,8 @@
 import { redirect } from "next/navigation";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getHeaderUser } from "@/lib/header-user";
 import { db } from "@/lib/db";
 import Sidebar, { DIVISION_NAV_FALLBACK, type DivisionNavItem } from "@/components/layout/Sidebar";
-import Header, { sessionToHeaderUser } from "@/components/layout/Header";
+import Header from "@/components/layout/Header";
 import MobileSidebarShell from "@/components/layout/MobileSidebar";
 
 export const dynamic = "force-dynamic";
@@ -68,14 +67,15 @@ async function getPresenceCounts(): Promise<{ onlineCount: number; activeProject
 }
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const session = await getServerSession(authOptions);
-  if (!session) {
+  const [divisions, counts, user] = await Promise.all([
+    getDivisions(),
+    getPresenceCounts(),
+    getHeaderUser(),
+  ]);
+
+  if (!user) {
     redirect("/login");
   }
-
-  const [divisions, counts] = await Promise.all([getDivisions(), getPresenceCounts()]);
-
-  const user = sessionToHeaderUser(session as never);
 
   // Mobile + desktop app shell: Header top, Sidebar left on desktop, drawer on mobile.
   // Use MobileSidebarShell client wrapper for responsive drawer state.

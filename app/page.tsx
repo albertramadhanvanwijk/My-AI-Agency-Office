@@ -15,6 +15,6 @@ export default async function HomePage() {
     redirect("/portal");
   }
 
-  // OWNER and any authenticated fallback → dashboard/lobby
-  redirect("/dashboard");
+  // OWNER and any authenticated fallback → lobby
+  redirect("/lobby");
 }

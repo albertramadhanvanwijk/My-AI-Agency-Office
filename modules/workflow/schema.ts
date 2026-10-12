@@ -81,6 +81,14 @@ export const RevisionInput = z.object({
   reason: z.string().min(5),
 });
 
+export const CreateTaskInput = z.object({
+  projectId: z.string(),
+  title: z.string().min(3),
+  description: z.string().min(10),
+  assigneeRoleId: z.string(),
+  stage: z.string(),
+});
+
 export type ProjectStatusType = z.infer<typeof ProjectStatus>;
 export type TaskStatusType = z.infer<typeof TaskStatus>;
 export type ProposalTypeType = z.infer<typeof ProposalType>;
@@ -92,3 +100,4 @@ export type CreateProjectInput = z.infer<typeof CreateProjectInput>;
 export type ApproveGateInput = z.infer<typeof ApproveGateInput>;
 export type DispatchTaskInput = z.infer<typeof DispatchTaskInput>;
 export type RevisionInput = z.infer<typeof RevisionInput>;
+export type CreateTaskInput = z.infer<typeof CreateTaskInput>;

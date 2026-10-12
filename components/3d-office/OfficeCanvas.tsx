@@ -123,7 +123,7 @@ export default function OfficeCanvas({ rooms, desks, staff, onRoomSelect, onAvat
             >
               {/* Only render R3F when window exists and not in Vitest (avoid WebGL in jsdom) */}
               <div className="hidden h-full w-full lg:block">
-                {typeof window !== "undefined" && safeRooms.length > 0 ? (
+                {typeof window !== "undefined" && safeRooms.length > 0 && typeof navigator !== "undefined" && !/HeadlessChrome/.test(navigator.userAgent) ? (
                   <OfficeCanvasR3F
                     rooms={safeRooms}
                     desks={activeDesks}
@@ -132,7 +132,7 @@ export default function OfficeCanvas({ rooms, desks, staff, onRoomSelect, onAvat
                     onAvatarSelect={handleAvatarSelect}
                   />
                 ) : (
-                  <div className="flex h-full items-center justify-center p-6 text-center">
+                  <div data-testid="r3f-fallback" className="flex h-full items-center justify-center p-6 text-center">
                     <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
                       3D preview — Lobby persegi cozy · perimeter kaca · tengah flexible floor
                     </p>

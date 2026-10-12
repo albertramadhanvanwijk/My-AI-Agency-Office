@@ -6,7 +6,8 @@ const CLIENT_PASSWORD = "client123";
 test.describe("Client Login → Portal → Project Detail → Chat → Download Invoice", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/login");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.waitForTimeout(500);
   });
 
   test("client can login and access portal", async ({ page }) => {
@@ -17,7 +18,7 @@ test.describe("Client Login → Portal → Project Detail → Chat → Download 
     
     // Should redirect to portal
     await expect(page).toHaveURL(/\/portal/);
-    await expect(page.locator("h1")).toContainText("Client Portal");
+    await expect(page.locator("h1")).toContainText("My Projects");
   });
 
   test("client sees only their own projects", async ({ page }) => {

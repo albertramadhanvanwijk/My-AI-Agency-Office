@@ -19,6 +19,9 @@ const statusTransitions: Record<Task["status"], Task["status"][]> = {
 
 export function KanbanCard({ task, onUpdate }: KanbanCardProps) {
   const nextStatuses = statusTransitions[task.status] || [];
+  const taskTitle = task.payload && typeof task.payload === "object" && "title" in task.payload 
+    ? String(task.payload.title) 
+    : (task.stage || "Task");
 
   return (
     <div
@@ -27,7 +30,7 @@ export function KanbanCard({ task, onUpdate }: KanbanCardProps) {
       draggable={true}
     >
       <div className="flex items-start justify-between gap-2 mb-2">
-        <h4 className="font-medium text-slate-900 text-sm line-clamp-1">{task.stage || "Task"}</h4>
+        <h4 className="font-medium text-slate-900 text-sm line-clamp-1">{taskTitle}</h4>
         <div className="flex items-center gap-1">
           {task.assigneeRoleId && (
             <Badge variant="secondary" className="text-xs">
