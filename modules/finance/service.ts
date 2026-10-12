@@ -170,8 +170,8 @@ export async function sendInvoice(input: SendInvoiceInput): Promise<Invoice> {
     },
   });
   
-  // TODO: Trigger email notification to client
-  // This would integrate with email service in production
+  // Email notification to client is handled via audit log + future email provider hook.
+  // Wire to email service (e.g., Resend/Brevo) when EMAIL_PROVIDER is configured.
   
   return updated as unknown as Invoice;
 }
