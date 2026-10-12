@@ -7,9 +7,11 @@ import { Button } from "@/components/ui/button";
 export function MessageInput({
   onSend,
   disabled,
+  onTyping,
 }: {
   onSend: (content: string) => Promise<void> | void;
   disabled?: boolean;
+  onTyping?: () => void;
 }) {
   const [value, setValue] = useState("");
   const [sending, setSending] = useState(false);
@@ -41,7 +43,11 @@ export function MessageInput({
       </Button>
       <textarea
         value={value}
-        onChange={(e) => setValue(e.target.value)}
+        onChange={(e) => {
+          setValue(e.target.value);
+          onTyping?.();
+          try { window.dispatchEvent(new CustomEvent("chat:typing")); } catch {}
+        }}
         onKeyDown={handleKeyDown}
         placeholder="Type a message…"
         rows={1}

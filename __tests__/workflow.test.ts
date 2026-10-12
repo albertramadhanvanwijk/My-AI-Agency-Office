@@ -201,4 +201,62 @@ describe("Workflow 7 Stage + PM Dispatch + Kanban + Provisional", () => {
     expect(result.proposalCreated).toBe(true);
     expect(result.provisionalDivision).toBeDefined();
   });
+
+  it("dispatchTask does not throw when REDIS_URL missing / enqueue fails (graceful fallback)", async () => {
+    const { dispatchTask, _resetDispatchQueue } = await import("@/modules/workflow/service");
+    _resetDispatchQueue();
+    // Force Queue.add to throw (simulate Redis unavailable)
+    mockQueueAdd.mockRejectedValueOnce(new Error("ECONNREFUSED"));
+    const res = await dispatchTask("t1", "r1");
+    expect(res.enqueued).toBeDefined();
+    expect(res.enqueued).toBe(false);
+    expect(res.skipped).toBeDefined();
+    // Still progresses — db.task.update called with progress
+    expect(mockDb.task.update).toHaveBeenCalledWith(expect.objectContaining({ data: { status: "progress" } }));
+    // Also verify skipped string contains error
+    expect(String(res.skipped)).toMatch(/ECONNREFUSED/);
+    _resetDispatchQueue();
+    mockQueueAdd.mockResolvedValue({ id: "job-1" });
+  });
+
+  it("getDispatchQueue respects REDIS_URL env (lazy init, no throw at import) and parseRedisUrl", async () => {
+    // Import should never throw even with no Redis
+    await expect(import("@/modules/workflow/service")).resolves.toBeDefined();
+    const { parseRedisUrl, getDispatchQueue, _resetDispatchQueue } = await import("@/modules/workflow/service");
+
+    // parseRedisUrl: redis://
+    expect(parseRedisUrl("redis://localhost:6379")).toEqual(expect.objectContaining({ host: "localhost", port: 6379 }));
+    expect(parseRedisUrl("redis://myhost:1234")).toEqual(expect.objectContaining({ host: "myhost", port: 1234 }));
+    // redis://:pass@host:port
+    expect(parseRedisUrl("redis://:s3cret@redis.example.com:6380")).toEqual(
+      expect.objectContaining({ host: "redis.example.com", port: 6380, password: "s3cret" })
+    );
+    // rediss:// with TLS
+    const tlsParsed = parseRedisUrl("rediss://:s3cret@redis.example.com:6380");
+    expect(tlsParsed.host).toBe("redis.example.com");
+    expect(tlsParsed.port).toBe(6380);
+    expect(tlsParsed.password).toBe("s3cret");
+    expect(tlsParsed.tls).toBeDefined();
+    // rediss without password
+    const tlsNoPass = parseRedisUrl("rediss://redis.example.com:6380");
+    expect(tlsNoPass.tls).toBeDefined();
+    expect(tlsNoPass.host).toBe("redis.example.com");
+
+    // Lazy singleton respects SKIP_LISTEN — returns null without throwing
+    const origSkip = process.env.SKIP_LISTEN;
+    process.env.SKIP_LISTEN = "true";
+    _resetDispatchQueue();
+    expect(getDispatchQueue()).toBeNull();
+    // Second call returns same null (cached)
+    expect(getDispatchQueue()).toBeNull();
+    _resetDispatchQueue();
+    process.env.SKIP_LISTEN = origSkip;
+
+    // After reset with no SKIP_LISTEN, queue is available (mock)
+    _resetDispatchQueue();
+    const q = getDispatchQueue();
+    expect(q).not.toBeNull();
+    expect(q?.add).toBeDefined();
+    _resetDispatchQueue();
+  });
 });

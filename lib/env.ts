@@ -39,6 +39,18 @@ export const env = {
   get NINE_ROUTER_BASE_URL() {
     return optionalEnv("NINE_ROUTER_BASE_URL", "https://api.9router.com/v1");
   },
+  get REDIS_URL() {
+    return optionalEnv("REDIS_URL");
+  },
+  get REDIS_HOST() {
+    return optionalEnv("REDIS_HOST");
+  },
+  get REDIS_PORT() {
+    return optionalEnv("REDIS_PORT", "6379");
+  },
+  get REALTIME_PORT() {
+    return optionalEnv("REALTIME_PORT", "3001");
+  },
   get NEXT_PUBLIC_APP_URL() {
     return optionalEnv("NEXT_PUBLIC_APP_URL", "http://localhost:3000");
   },

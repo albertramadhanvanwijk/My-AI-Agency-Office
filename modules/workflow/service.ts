@@ -3,7 +3,56 @@ import { aiDispatch } from "@/lib/ai/router";
 import { emitPresence } from "@/lib/realtime/server";
 import { Queue } from "bullmq";
 
-const dispatchQueue = new Queue("dispatch", { connection: { host: "localhost", port: 6379 } });
+export function parseRedisUrl(url: string): { host: string; port: number; password?: string; tls?: object } {
+  const u = new URL(url);
+  const host = u.hostname || "localhost";
+  const port = u.port ? Number.parseInt(u.port, 10) : 6379;
+  const password = u.password ? decodeURIComponent(u.password) : undefined;
+  const tls = u.protocol === "rediss:" ? {} : undefined;
+  return {
+    host,
+    port,
+    ...(password ? { password } : {}),
+    ...(tls ? { tls } : {}),
+  };
+}
+
+let _queue: Queue | null | undefined = undefined;
+
+export function getDispatchQueue(): Queue | null {
+  if (_queue !== undefined) return _queue;
+  if (process.env.SKIP_LISTEN === "true") {
+    _queue = null;
+    return _queue;
+  }
+  const url = process.env.REDIS_URL;
+  try {
+    if (url) {
+      const conn = parseRedisUrl(url);
+      _queue = new Queue("dispatch", { connection: conn as unknown as { host: string; port: number } });
+    } else if (process.env.REDIS_HOST) {
+      _queue = new Queue("dispatch", {
+        connection: {
+          host: process.env.REDIS_HOST,
+          port: Number.parseInt(process.env.REDIS_PORT || "6379", 10),
+        },
+      });
+    } else {
+      _queue = new Queue("dispatch", {
+        connection: { host: "localhost", port: 6379 },
+        prefix: "myagency",
+      });
+    }
+  } catch {
+    _queue = null;
+  }
+  return _queue;
+}
+
+// Test-only helper to reset lazy singleton between tests
+export function _resetDispatchQueue(): void {
+  _queue = undefined;
+}
 
 export async function createProject(input: { clientId: string; title: string; brief: string }) {
   return db.project.create({
@@ -63,19 +112,40 @@ export async function buildWBS(projectId: string) {
   return { project, tasks: created };
 }
 
-export async function dispatchTask(taskId: string, roleId: string) {
+export async function dispatchTask(
+  taskId: string,
+  roleId: string
+): Promise<{ enqueued: boolean; skipped?: string }> {
   const task = await db.task.findUnique({ where: { id: taskId } });
   if (!task) throw new Error("Task not found");
 
-  // Enqueue to BullMQ
-  await dispatchQueue.add("dispatch", { taskId, roleId });
+  // Enqueue to BullMQ — best-effort, never throws
+  let enqueued = false;
+  let skipped: string | undefined;
+  try {
+    const q = getDispatchQueue();
+    if (q) {
+      await q.add("dispatch", { taskId, roleId });
+      enqueued = true;
+    } else {
+      skipped = "no-queue";
+    }
+  } catch (e) {
+    console.warn("[dispatch] enqueue skipped", e);
+    skipped = String(e);
+  }
 
-  // Activate staff via realtime
-  await emitPresence("staff:status", { roleId, status: "active" });
+  // Activate staff via realtime (best-effort)
+  try {
+    await emitPresence("staff:status", { roleId, status: "active" });
+  } catch {
+    // ignore presence failures
+  }
 
   await db.task.update({ where: { id: taskId }, data: { status: "progress" } });
 
-  return { enqueued: true };
+  if (enqueued) return { enqueued: true };
+  return { enqueued: false, skipped: skipped ?? "unknown" };
 }
 
 export async function qaConsolidate(projectId: string) {

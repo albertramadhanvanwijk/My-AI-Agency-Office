@@ -217,4 +217,34 @@ describe("auth — Task 3 (Google + Credentials + role guards)", () => {
     const res = await middleware(req as unknown as Parameters<typeof middleware>[0]);
     expect(res.status).toBe(401);
   });
+
+  it("CLIENT cannot access /admin (redirect to /portal)", async () => {
+    const { getToken } = await import("next-auth/jwt");
+    (getToken as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({ role: "CLIENT", email: "client@test.com", sub: "c1" });
+
+    const { middleware } = await import("@/middleware");
+    const req = makeRequest("/admin");
+    const res = await middleware(req as unknown as Parameters<typeof middleware>[0]);
+    expect(res.status).toBeGreaterThanOrEqual(300);
+    expect(res.status).toBeLessThan(400);
+    const loc = (res.headers.get("location") || res.headers.get("Location") || "").toString();
+    expect(loc).toMatch(/\/portal|\/login/);
+  });
+
+  it("OWNER can access /admin (next)", async () => {
+    const { getToken } = await import("next-auth/jwt");
+    (getToken as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({ role: "OWNER", email: "owner@test.com", sub: "o1" });
+
+    const { middleware } = await import("@/middleware");
+    const req = makeRequest("/admin");
+    const res = await middleware(req as unknown as Parameters<typeof middleware>[0]);
+    const loc = res.headers.get("location") || res.headers.get("Location") || "";
+    expect(loc).not.toMatch(/\/login/);
+    expect(loc).not.toMatch(/\/portal/);
+    // OWNER should not be redirected away from /admin
+    if (res.status >= 300 && res.status < 400) {
+      expect(loc).not.toContain("/login");
+      expect(loc).not.toContain("/portal");
+    }
+  });
 });

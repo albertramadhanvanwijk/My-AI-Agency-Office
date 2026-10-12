@@ -8,7 +8,7 @@ process.env.GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || "test-goo
 process.env.NINE_ROUTER_API_KEY = process.env.NINE_ROUTER_API_KEY || "test-9router-key";
 process.env.SKIP_LISTEN = "true";
 
-const { mockDb, mockEmitPresence } = vi.hoisted(() => ({
+const { mockDb, mockEmitPresence, mockEmitToConversation } = vi.hoisted(() => ({
   mockDb: {
     conversation: {
       findFirst: vi.fn(),
@@ -27,11 +27,13 @@ const { mockDb, mockEmitPresence } = vi.hoisted(() => ({
     },
   },
   mockEmitPresence: vi.fn(),
+  mockEmitToConversation: vi.fn(),
 }));
 
 vi.mock("@/lib/db", () => ({ db: mockDb }));
 vi.mock("@/lib/realtime/server", () => ({
   emitPresence: mockEmitPresence,
+  emitToConversation: mockEmitToConversation,
   getIO: vi.fn(() => null),
   startRealtimeServer: vi.fn(),
 }));
@@ -69,6 +71,7 @@ describe("Chat Module — conversations + messages (Task 11)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockEmitPresence.mockClear();
+    mockEmitToConversation.mockClear();
   });
 
   it("project chat links to projectId, direct has null", async () => {
@@ -113,7 +116,7 @@ describe("Chat Module — conversations + messages (Task 11)", () => {
     expect(mockDb.message.findMany).not.toHaveBeenCalled();
   });
 
-  it("new message broadcasts via WS (mock emit)", async () => {
+  it("new message broadcasts via WS scoped to conversation room (emitToConversation)", async () => {
     const { sendMessage } = await import("@/modules/chat/service");
 
     mockDb.conversation.findUnique.mockResolvedValueOnce({
@@ -140,6 +143,44 @@ describe("Chat Module — conversations + messages (Task 11)", () => {
 
     expect(msg.content).toBe("hello");
     expect(mockDb.message.create).toHaveBeenCalled();
-    expect(mockEmitPresence).toHaveBeenCalledWith("message:new", expect.objectContaining({ content: "hello" }));
+    expect(mockEmitToConversation).toHaveBeenCalledWith("conv-1", "message:new", expect.objectContaining({ content: "hello" }));
+    expect(mockEmitPresence).not.toHaveBeenCalled();
+  });
+
+  // Task 4 — per-conversation room scoping
+  it("message:new is emitted only to conversation room, not office broadcast", async () => {
+    const { sendMessage } = await import("@/modules/chat/service");
+
+    mockDb.conversation.findUnique.mockResolvedValueOnce({
+      ...mockConversation,
+      participantIds: ["user-1", "user-2"],
+    } as never);
+    mockDb.message.create.mockResolvedValueOnce({
+      id: "msg-2",
+      conversationId: "conv-1",
+      senderType: "human",
+      senderId: "user-1",
+      content: "hi",
+      createdAt: new Date("2026-10-10T12:00:00Z"),
+    } as never);
+    mockDb.conversation.update.mockResolvedValueOnce({ id: "conv-1" } as never);
+
+    await sendMessage("conv-1", {
+      content: "hi",
+      senderType: "human",
+      senderId: "user-1",
+    });
+
+    expect(mockEmitToConversation).toHaveBeenCalledWith("conv-1", "message:new", expect.objectContaining({ content: "hi" }));
+    expect(mockEmitToConversation).not.toHaveBeenCalledWith("conv-2", expect.anything(), expect.anything());
+  });
+
+  it("realtime client exposes per-conversation and typing helpers", async () => {
+    const client = await import("@/lib/realtime/client");
+    expect(typeof client.joinConversation).toBe("function");
+    expect(typeof client.leaveConversation).toBe("function");
+    expect(typeof client.onMessageNew).toBe("function");
+    expect(typeof client.emitTyping).toBe("function");
+    expect(typeof client.onTyping).toBe("function");
   });
 });

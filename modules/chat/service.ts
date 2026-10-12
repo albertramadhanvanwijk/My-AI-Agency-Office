@@ -5,13 +5,17 @@ import {
   type GetOrCreateConversationInput,
   type SendMessageInput,
 } from "./schema";
-import { emitPresence } from "@/lib/realtime/server";
-
-function emitChatSafe(event: string, data: unknown): void {
+async function emitChatScoped(conversationId: string, event: string, data: unknown): Promise<void> {
   try {
-    emitPresence(event, data);
+    const { emitToConversation } = await import("@/lib/realtime/server");
+    emitToConversation(conversationId, event, data);
   } catch {
-    // realtime optional / not initialized in tests
+    try {
+      const { emitPresence } = await import("@/lib/realtime/server");
+      emitPresence(event, data);
+    } catch {
+      // realtime optional / not initialized in tests
+    }
   }
 }
 
@@ -147,7 +151,7 @@ export async function sendMessage(conversationId: string, input: SendMessageInpu
     where: { id: conversationId },
     data: { updatedAt: new Date() } as never,
   });
-  emitChatSafe("message:new", msg);
+  await emitChatScoped(conversationId, "message:new", msg);
   return msg;
 }
 

@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { connectPresence, onStaffStatus } from "@/lib/realtime/client";
+import { connectPresence } from "@/lib/realtime/client";
 import { format } from "date-fns";
 
 interface Message {
@@ -90,44 +90,55 @@ export function ChatDrawer({ projectId, isOpen, onClose }: ChatDrawerProps) {
     fetchConversation();
   }, [isOpen, projectId]);
 
-  // Connect to WebSocket for real-time updates
+  // Connect to WebSocket for real-time updates — per-conversation room (Task 4)
   useEffect(() => {
     if (!isOpen || !conversation) return;
-
-    // Connect to socket
-    const socket = connectPresence();
-    socketRef.current = socket;
-
-    // Listen for new messages
-    socket.on("message:new", (newMessage: Message) => {
-      if (newMessage.conversationId === conversation.id) {
-        setMessages(prev => [...prev, newMessage]);
+    let offMsg: (() => void) | undefined;
+    let offTyping: (() => void) | undefined;
+    (async () => {
+      try {
+        const { joinConversation, leaveConversation, onMessageNew, onTyping } = await import("@/lib/realtime/client");
+        // keep raw socket ref for emitTyping fallback if needed
+        socketRef.current = (await import("@/lib/realtime/client")).connectPresence() as unknown as typeof socketRef.current;
+        joinConversation(conversation.id);
+        offMsg = onMessageNew((raw: unknown) => {
+          const m = raw as Message;
+          if (m.conversationId !== conversation.id) return;
+          setMessages((prev) => [...prev, m]);
+        });
+        offTyping = onTyping((data: { conversationId: string; userId: string; isTyping: boolean }) => {
+          if (data.conversationId !== conversation.id) return;
+          if (data.userId === currentUserId) return;
+          if (data.isTyping) {
+            setTypingUsers((prev) => new Set(prev).add(data.userId));
+            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+            typingTimeoutRef.current = setTimeout(() => {
+              setTypingUsers((prev) => {
+                const next = new Set(prev);
+                next.delete(data.userId);
+                return next;
+              });
+            }, 3000);
+          } else {
+            setTypingUsers((prev) => {
+              const next = new Set(prev);
+              next.delete(data.userId);
+              return next;
+            });
+          }
+        });
+        // stash leaver for cleanup
+        (socketRef as unknown as { _leaveConversation?: (id: string) => void })._leaveConversation = leaveConversation;
+      } catch {
+        // realtime optional
       }
-    });
-
-    // Listen for typing indicators
-    socket.on("user:typing", (data: { userId: string; userName: string; conversationId: string }) => {
-      if (data.conversationId === conversation.id && data.userId !== currentUserId) {
-        setTypingUsers(prev => new Set(prev).add(data.userId));
-        // Clear typing indicator after 3 seconds
-        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-        typingTimeoutRef.current = setTimeout(() => {
-          setTypingUsers(prev => {
-            const next = new Set(prev);
-            next.delete(data.userId);
-            return next;
-          });
-        }, 3000);
-      }
-    });
-
-    // Join conversation room
-    socket.emit("conversation:join", { conversationId: conversation.id });
-
+    })();
     return () => {
-      socket.off("message:new");
-      socket.off("user:typing");
-      socket.emit("conversation:leave", { conversationId: conversation.id });
+      offMsg?.();
+      offTyping?.();
+      const leave = (socketRef as unknown as { _leaveConversation?: (id: string) => void })._leaveConversation;
+      if (leave) leave(conversation.id);
+      else import("@/lib/realtime/client").then(({ leaveConversation }) => leaveConversation(conversation.id)).catch(() => {});
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     };
   }, [isOpen, conversation, currentUserId]);
@@ -181,14 +192,16 @@ export function ChatDrawer({ projectId, isOpen, onClose }: ChatDrawerProps) {
     }
   };
 
-  const handleTyping = () => {
-    if (!conversation || !socketRef.current) return;
-    
-    socketRef.current.emit("user:typing", {
-      conversationId: conversation.id,
-      userId: currentUserId,
-    });
-  };
+  const typingDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const handleTyping = useCallback(() => {
+    if (!conversation) return;
+    import("@/lib/realtime/client").then(({ emitTyping }) => emitTyping(conversation.id, true)).catch(() => {});
+    if (typingDebounceRef.current) clearTimeout(typingDebounceRef.current);
+    typingDebounceRef.current = setTimeout(() => {
+      if (!conversation) return;
+      import("@/lib/realtime/client").then(({ emitTyping }) => emitTyping(conversation.id, false)).catch(() => {});
+    }, 3000);
+  }, [conversation]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputValue(e.target.value);

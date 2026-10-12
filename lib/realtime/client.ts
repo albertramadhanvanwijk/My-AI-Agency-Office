@@ -111,3 +111,30 @@ export async function requestDeactivateStaff(staffId: string): Promise<{
   });
   return res.json();
 }
+
+// ── Chat per-conversation helpers (Task 4) ──
+
+export function joinConversation(id: string): void {
+  connectPresence().emit("conversation:join", id);
+}
+
+export function leaveConversation(id: string): void {
+  connectPresence().emit("conversation:leave", id);
+}
+
+export function onMessageNew(cb: (msg: unknown) => void): () => void {
+  const s = connectPresence();
+  const handler = (d: unknown) => cb(d);
+  s.on("message:new", handler);
+  return () => s.off("message:new", handler);
+}
+
+export function emitTyping(conversationId: string, isTyping: boolean): void {
+  connectPresence().emit("user:typing", { conversationId, isTyping, userId: "self" });
+}
+
+export function onTyping(cb: (data: { conversationId: string; userId: string; isTyping: boolean }) => void): () => void {
+  const s = connectPresence();
+  s.on("user:typing", cb as (data: unknown) => void);
+  return () => s.off("user:typing", cb as (data: unknown) => void);
+}

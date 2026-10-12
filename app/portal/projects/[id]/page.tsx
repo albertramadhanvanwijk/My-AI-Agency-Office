@@ -209,6 +209,16 @@ export default function ProjectDetailPage() {
           <Badge variant="outline" className={statusColors[project.status]}>
             {statusLabels[project.status] || project.status}
           </Badge>
+          {(project.status === "INQUIRY" || project.status === "BRIEF") && (
+            <Button variant="outline" asChild>
+              <Link href={`/portal/projects/${projectId}/approve?gate=brief`}>Approve Brief</Link>
+            </Button>
+          )}
+          {project.status === "PLANNING" && (
+            <Button variant="outline" asChild>
+              <Link href={`/portal/projects/${projectId}/approve?gate=plan`}>Approve Plan</Link>
+            </Button>
+          )}
           <Button variant="outline" onClick={() => setChatOpen(true)}>
             <MessageSquare className="w-4 h-4 mr-2" /> Chat
           </Button>

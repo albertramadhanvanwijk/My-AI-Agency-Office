@@ -34,8 +34,19 @@ export async function approveGateAction(input: z.infer<typeof ApproveGateInput>)
   if (!session?.user) redirect("/login");
 
   const parsed = ApproveGateInput.parse(input);
+  // Portal client guard: non-OWNER may only approve as "client" and only own project
+  if (parsed.approver === "client" && (session.user as unknown as { role?: string }).role !== "OWNER") {
+    const p = await db.project.findUnique({ where: { id: parsed.projectId }, include: { client: { include: { user: true } } } });
+    if (!p) throw new Error("Project not found");
+    const sid = (session.user as unknown as { id?: string }).id;
+    const email = (session.user as unknown as { email?: string }).email;
+    const ownerById = sid && p.clientId === sid;
+    const ownerByEmail = !!(email && p.client?.user?.email && email === p.client.user.email);
+    if (!ownerById && !ownerByEmail) throw new Error("Forbidden: not project owner");
+  }
   const project = await approveGate(parsed.projectId, parsed.gate, parsed.approver);
   revalidatePath(`/projects/${parsed.projectId}`);
+  revalidatePath(`/portal/projects/${parsed.projectId}`);
   return project;
 }
 

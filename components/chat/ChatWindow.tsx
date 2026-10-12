@@ -49,34 +49,62 @@ export function ChatWindow({
     setMessages(initialMessages);
   }, [initialMessages, conversationId]);
 
-  // realtime: subscribe to presence channel for message:new
+  // typing indicator from peers
+  const [typing, setTyping] = useState(false);
+  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // realtime: per-conversation room — join on open, scoped message:new + user:typing
   useEffect(() => {
-    let cleanup: (() => void) | undefined;
+    let offMsg: (() => void) | undefined;
+    let offTyping: (() => void) | undefined;
     let mounted = true;
     (async () => {
       try {
-        const { connectPresence } = await import("@/lib/realtime/client");
-        const socket = connectPresence();
-        const handler = (msg: ChatMessage) => {
+        const { joinConversation, leaveConversation, onMessageNew, onTyping } = await import("@/lib/realtime/client");
+        joinConversation(conversationId);
+        offMsg = onMessageNew((raw: unknown) => {
           if (!mounted) return;
+          const msg = raw as ChatMessage;
           if (msg.conversationId !== conversationId) return;
           setMessages((prev) => (prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]));
-        };
-        socket.on("message:new", handler);
-        socket.emit("conversation:join", { conversationId });
-        cleanup = () => {
-          socket.off("message:new", handler);
-          socket.emit("conversation:leave", { conversationId });
-        };
+        });
+        offTyping = onTyping((d) => {
+          if (d.conversationId !== conversationId) return;
+          if (d.isTyping) {
+            setTyping(true);
+          } else {
+            setTyping(false);
+          }
+        });
       } catch {
         // realtime optional
       }
     })();
     return () => {
       mounted = false;
-      cleanup?.();
+      offMsg?.();
+      offTyping?.();
+      import("@/lib/realtime/client").then(({ leaveConversation }) => leaveConversation(conversationId)).catch(() => {});
     };
   }, [conversationId]);
+
+  // Input typing emit with 3s debounce to false (used by ChatWindow when paired with a typing-aware input)
+  // Expose via data attr callback on textarea if needed; MessageInput currently owns the textarea.
+  // We keep a typed-broadcast helper attached to the window so an upgraded MessageInput can call it.
+  const emitTypingTrue = useCallback(() => {
+    import("@/lib/realtime/client").then(({ emitTyping }) => emitTyping(conversationId, true)).catch(() => {});
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = setTimeout(() => {
+      import("@/lib/realtime/client").then(({ emitTyping }) => emitTyping(conversationId, false)).catch(() => {});
+    }, 3000);
+  }, [conversationId]);
+
+  // Notify on typing when messages state not used: hook MessageInput via custom event
+  useEffect(() => {
+    const handler = () => emitTypingTrue();
+    window.addEventListener("chat:typing", handler as EventListener);
+    return () => window.removeEventListener("chat:typing", handler as EventListener);
+  }, [emitTypingTrue]);
 
   const [loading, setLoading] = useState(false);
 
@@ -146,6 +174,12 @@ export function ChatWindow({
             );
           })
         )}
+        {typing && (
+          <div className="flex gap-2 items-center text-xs text-slate-400 px-1">
+            <span className="w-2 h-2 rounded-full bg-slate-400 animate-bounce" />
+            <span>Someone is typing…</span>
+          </div>
+        )}
         <div ref={bottomRef} />
         {loading && (
           <div className="flex justify-center">
@@ -153,7 +187,7 @@ export function ChatWindow({
           </div>
         )}
       </div>
-      <MessageInput onSend={handleSend} />
+      <MessageInput onSend={handleSend} onTyping={emitTypingTrue} />
     </div>
   );
 }

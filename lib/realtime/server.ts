@@ -45,6 +45,16 @@ export function startRealtimeServer(port = HTTP_PORT): Server {
     // Join office room for presence updates
     socket.join("office");
 
+    socket.on("conversation:join", (id: string) => {
+      socket.join(`conversation:${id}`);
+    });
+    socket.on("conversation:leave", (id: string) => {
+      socket.leave(`conversation:${id}`);
+    });
+    socket.on("user:typing", ({ conversationId, userId, isTyping }: { conversationId: string; userId: string; isTyping: boolean }) => {
+      socket.to(`conversation:${conversationId}`).emit("user:typing", { conversationId, userId, isTyping });
+    });
+
     socket.on("disconnect", () => {
       console.log(`[Realtime] Client disconnected: ${socket.id}`);
     });
@@ -74,11 +84,20 @@ export function getIO(): Server | null {
 }
 
 /**
- * Emit presence event to all clients in office room
+ * Emit presence event to all clients in office room (staff:status, etc.)
  */
 export function emitPresence(event: string, data: unknown): void {
   if (io) {
     io.of("/presence").to("office").emit(event, data);
+  }
+}
+
+/**
+ * Emit to a specific conversation room — used for message:new
+ */
+export function emitToConversation(conversationId: string, event: string, data: unknown): void {
+  if (io) {
+    io.of("/presence").to(`conversation:${conversationId}`).emit(event, data);
   }
 }
 

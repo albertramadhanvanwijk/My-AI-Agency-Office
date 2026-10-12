@@ -78,7 +78,8 @@ export async function middleware(req: NextRequest) {
       pathname.startsWith("/projects") ||
       pathname.startsWith("/chat") ||
       pathname.startsWith("/organization") ||
-      pathname.startsWith("/divisions");
+      pathname.startsWith("/divisions") ||
+      pathname.startsWith("/admin");
     if (!isProtectedPrefix) return res;
   }
 
@@ -88,11 +89,12 @@ export async function middleware(req: NextRequest) {
     pathname.startsWith("/chat") ||
     pathname.startsWith("/organization") ||
     pathname.startsWith("/divisions");
+  const isAdmin = pathname.startsWith("/admin");
   const isPortal = pathname.startsWith("/portal");
   const isApi = pathname.startsWith("/api/");
 
-  // Unprotected routes that are not dashboard/portal/api — allow through (e.g., /)
-  if (!isProtectedDashboard && !isPortal && !isApi) {
+  // Unprotected routes that are not dashboard/portal/api/admin — allow through (e.g., /)
+  if (!isProtectedDashboard && !isPortal && !isApi && !isAdmin) {
     return res;
   }
 
@@ -147,6 +149,14 @@ export async function middleware(req: NextRequest) {
     return res;
   }
 
+  if (isAdmin) {
+    if (role !== "OWNER") {
+      const target = new URL(role === "CLIENT" ? "/portal" : "/login", req.url);
+      return NextResponse.redirect(target);
+    }
+    return res;
+  }
+
   return res;
 }
 
@@ -154,6 +164,8 @@ export const config = {
   matcher: [
     "/portal/:path*",
     "/api/:path*",
+    "/admin",
+    "/admin/:path*",
     "/lobby",
     "/lobby/:path*",
     "/projects",

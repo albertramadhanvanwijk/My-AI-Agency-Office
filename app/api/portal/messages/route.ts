@@ -2,7 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { NextRequest, NextResponse } from "next/server";
-import { emitPresence } from "@/lib/realtime/server";
+// realtime emit is scoped per-conversation (see lib/realtime/server emitToConversation)
 
 export async function GET(req: NextRequest) {
   try {
@@ -106,16 +106,19 @@ export async function POST(req: NextRequest) {
       data: { updatedAt: new Date() },
     });
 
-    // Emit real-time event
     const messageWithSender = {
       ...message,
       senderName: user.name,
     };
 
-    emitPresence("message:new", messageWithSender);
-
-    // Also emit to conversation room via socket.io (if using namespaces)
-    // This is handled by the realtime server
+    // Scoped emit to conversation room; fallback to office for backwards-compat/tests
+    try {
+      const { emitToConversation } = await import("@/lib/realtime/server");
+      emitToConversation(conversationId, "message:new", messageWithSender);
+    } catch {
+      const { emitPresence } = await import("@/lib/realtime/server");
+      emitPresence("message:new", messageWithSender);
+    }
 
     return NextResponse.json({ message: messageWithSender });
   } catch (e) {
